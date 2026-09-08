@@ -67,5 +67,40 @@ document.querySelectorAll("#mobileNav a").forEach((link) => link.addEventListene
   document.querySelector("#mobileNav").classList.remove("open");
   document.querySelector("#menuButton").setAttribute("aria-expanded", "false");
 }));
+
+const modals = document.querySelectorAll(".modal");
+let lastFocusedElement;
+
+function closeModal(modal) {
+  modal.hidden = true;
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
+
+document.querySelectorAll("[data-modal-target]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const modal = document.querySelector(`#${button.dataset.modalTarget}`);
+    lastFocusedElement = button;
+    modal.hidden = false;
+    modal.querySelector(".close-btn").focus();
+  });
+});
+
+document.querySelectorAll("[data-modal-close]").forEach((button) => {
+  button.addEventListener("click", () => closeModal(button.closest(".modal")));
+});
+
+modals.forEach((modal) => {
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeModal(modal);
+  });
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    const openModal = [...modals].find((modal) => !modal.hidden);
+    if (openModal) closeModal(openModal);
+  }
+});
+
 updateClock();
 setInterval(updateClock, 30000);

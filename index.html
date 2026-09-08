@@ -133,11 +133,94 @@
       </section>
     </main>
 
+    <section class="action-panel" aria-labelledby="action-panel-title">
+      <div>
+        <p class="eyebrow">Ready-to-use templates</p>
+        <h2 id="action-panel-title">Take the next step.</h2>
+        <p class="action-panel-copy">Use these editable starting points for civic participation. Review the details with the appropriate town office or legal professional before submitting.</p>
+      </div>
+      <div class="action-buttons">
+        <button class="footer-btn btn-orange" type="button" data-modal-target="petitionModal">
+          <span aria-hidden="true">▤</span> Special Meeting Petition
+        </button>
+        <button class="footer-btn btn-teal" type="button" data-modal-target="coraModal">
+          <span aria-hidden="true">✉</span> CORA Records Request
+        </button>
+        <button class="footer-btn btn-red" type="button" data-modal-target="scriptModal">
+          <span aria-hidden="true">♩</span> Public Comment Script
+        </button>
+      </div>
+    </section>
+
     <footer class="site-footer">
       <span>© 2025 Bennett Citizens</span>
       <span>Made for neighbors, by neighbors.</span>
+      <a href="https://mik-create.github.io/Bennett-CO-Info/" target="_blank" rel="noopener noreferrer">Public site ↗</a>
       <a href="mailto:hello@bennettcitizens.org">hello@bennettcitizens.org</a>
     </footer>
+
+    <div class="modal" id="petitionModal" role="dialog" aria-modal="true" aria-labelledby="petitionModalTitle" hidden>
+      <div class="modal-content">
+        <button class="close-btn" type="button" data-modal-close aria-label="Close special meeting petition">&times;</button>
+        <p class="eyebrow">Editable template</p>
+        <h2 class="modal-title" id="petitionModalTitle">Special Meeting Directive Form</h2>
+        <p class="modal-note">Confirm the applicable statute, filing process, and signature requirements with the Town Clerk before use.</p>
+        <pre>TO THE TOWN CLERK OF BENNETT, COLORADO:
+
+Pursuant to Colorado Revised Statutes § 31-4-107, the undersigned members of the Town of Bennett Board of Trustees hereby demand and direct that a Special Meeting of the Board of Trustees be called.
+
+PURPOSE OF MEETING: Comprehensive review, utility allocation analysis, and public safety impact assessment regarding proposed data center facilities within municipal boundaries.
+
+TRUSTEE SIGNATURES (3 Required):
+
+1. _________________________________ Date: __________
+2. _________________________________ Date: __________
+3. _________________________________ Date: __________</pre>
+      </div>
+    </div>
+
+    <div class="modal" id="coraModal" role="dialog" aria-modal="true" aria-labelledby="coraModalTitle" hidden>
+      <div class="modal-content">
+        <button class="close-btn" type="button" data-modal-close aria-label="Close CORA records request">&times;</button>
+        <p class="eyebrow">Editable template</p>
+        <h2 class="modal-title" id="coraModalTitle">Official CORA Template Text</h2>
+        <p class="modal-note">Replace the date, requester details, and scope as needed. Confirm current response timelines and fees with the records custodian.</p>
+        <pre>To: Town Clerk / Records Custodian, Town of Bennett, CO
+Date: September 8, 2026
+
+RE: Colorado Open Records Act (CORA) Request - Data Center Utility &amp; Framework Communications
+
+Dear Records Custodian,
+
+Pursuant to the Colorado Open Records Act (C.R.S. § 24-72-201 et seq.), I hereby request access to and copies of the following public records:
+
+1. All emails, text messages, and written correspondence between Town Staff/Elected Officials and data center developers from January 1, 2026 to present.
+2. All grid capacity, water cooling feasibility, and environmental impact assessments submitted regarding proposed utility allocations.
+
+As specified by C.R.S. § 24-72-203, a response is legally required within three (3) business days.
+
+Sincerely,
+[Your Name/Bennett Resident Group]</pre>
+      </div>
+    </div>
+
+    <div class="modal" id="scriptModal" role="dialog" aria-modal="true" aria-labelledby="scriptModalTitle" hidden>
+      <div class="modal-content">
+        <button class="close-btn" type="button" data-modal-close aria-label="Close public comment script">&times;</button>
+        <p class="eyebrow">Editable template</p>
+        <h2 class="modal-title" id="scriptModalTitle">Coordinated 3-Speaker Script</h2>
+        <p class="modal-note">Adapt this script to your own words and confirm any legal references before speaking publicly.</p>
+        <pre>SPEAKER 1 (The Legal Baseline):
+"Good evening. Under C.R.S. § 24-6-402, our community is legally entitled to absolute transparency regarding local utility grids and land modifications. We are placing onto the public record our demand that no backchannel frameworks or fast-tracked zoning exclusions occur without explicit open oversight."
+
+SPEAKER 2 (The Resource Burden):
+"Following up on our legal boundaries, the water and power load allocations required by industrial data centers directly challenge Bennett's local infrastructure. We demand comprehensive impact publications before any infrastructure permissions are authorized."
+
+SPEAKER 3 (The Action Tool):
+"To ensure these boundaries are upheld, we are formally presenting the Board with an oversight request. We are delivering copies of our formal CORA filings directly to the Town Clerk tonight to ensure our record of inquiry is officially preserved."</pre>
+      </div>
+    </div>
+
     <script src="app.js"></script>
   </body>
 </html>
