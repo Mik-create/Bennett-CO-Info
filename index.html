@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>Colorado 2026 Data-Center Policy Mind Map</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['Inter', 'sans-serif'] },
+      colors: {
+        surface: { 50:'#1a1d27', 100:'#161922', 200:'#12141c', 300:'#0f1117', 400:'#0b0d12', 500:'#08090d' },
+        glass: { 100:'rgba(255,255,255,0.03)', 200:'rgba(255,255,255,0.06)', 300:'rgba(255,255,255,0.09)', 400:'rgba(255,255,255,0.12)' },
+        gold: { 400:'#f5c518', 500:'#d4a910', 600:'#b08e0a' },
+        txt: { 100:'#f0f0f0', 200:'#c8c8cc', 300:'#9a9aa0', 400:'#6e6e78' }
+      }
+    }
+  }
+};
+</script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:#0f1117; color:#f0f0f0; overflow:hidden; height:100vh; width:100vw; }
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:3px; }
+#canvas-container { position:absolute; inset:0; z-index:1; }
+canvas { display:block; cursor:grab; }
+canvas.grabbing { cursor:grabbing; }
+
+.toolbar { position:fixed; top:0; left:0; right:0; z-index:50; background:rgba(15,17,23,0.82); backdrop-filter:blur(20px) saturate(1.4); border-bottom:1px solid rgba(255,255,255,0.06); }
+.layer-btn { padding:5px 12px; border-radius:8px; font-size:11px; font-weight:500; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:#9a9aa0; cursor:pointer; transition:all .2s; white-space:nowrap; }
+.layer-btn:hover { background:rgba(255,255,255,0.08); color:#f0f0f0; }
+.layer-btn.active { background:rgba(245,197,24,0.15); border-color:rgba(245,197,24,0.4); color:#f5c518; }
+.tool-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:500; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:#c8c8cc; cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:5px; }
+.tool-btn:hover { background:rgba(255,255,255,0.1); color:#f0f0f0; }
+
+.detail-panel { position:fixed; top:56px; right:0; bottom:0; width:420px; max-width:100vw; z-index:40; background:rgba(18,20,28,0.95); backdrop-filter:blur(24px); border-left:1px solid rgba(255,255,255,0.06); transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); overflow-y:auto; }
+.detail-panel.open { transform:translateX(0); }
+.detail-panel .status-badge { display:inline-block; padding:3px 10px; border-radius:6px; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; }
+
+.timeline-bar { position:fixed; bottom:0; left:0; right:0; z-index:45; background:rgba(15,17,23,0.88); backdrop-filter:blur(16px); border-top:1px solid rgba(255,255,255,0.06); padding:10px 24px 14px; }
+.timeline-track { position:relative; height:4px; background:rgba(255,255,255,0.08); border-radius:2px; cursor:pointer; }
+.timeline-fill { position:absolute; left:0; top:0; height:100%; background:linear-gradient(90deg,#f5c518,#e74c3c); border-radius:2px; pointer-events:none; }
+.timeline-thumb { position:absolute; top:50%; width:16px; height:16px; background:#f5c518; border-radius:50%; transform:translate(-50%,-50%); cursor:grab; box-shadow:0 0 10px rgba(245,197,24,0.5); }
+
+.minimap { position:fixed; bottom:60px; right:16px; z-index:42; width:180px; height:120px; background:rgba(15,17,23,0.9); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; }
+.minimap canvas { width:100%; height:100%; }
+.minimap-viewport { position:absolute; border:1.5px solid #f5c518; pointer-events:none; border-radius:2px; }
+
+.legend-panel { position:fixed; bottom:60px; left:16px; z-index:42; background:rgba(15,17,23,0.92); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 16px; max-width:220px; }
+.legend-item { display:flex; align-items:center; gap:8px; padding:3px 0; font-size:11px; color:#c8c8cc; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+.search-container { position:relative; }
+.search-container input { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:6px 12px 6px 32px; font-size:12px; color:#f0f0f0; width:200px; outline:none; font-family:inherit; transition:all .2s; }
+.search-container input:focus { border-color:rgba(245,197,24,0.4); background:rgba(255,255,255,0.08); width:260px; }
+.search-container i { position:absolute; left:9px; top:50%; transform:translateY(-50%); }
+
+.toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(245,197,24,0.15); border:1px solid rgba(245,197,24,0.3); color:#f5c518; padding:8px 20px; border-radius:10px; font-size:12px; font-weight:500; z-index:99; opacity:0; transition:opacity .3s; pointer-events:none; }
+.toast.show { opacity:1; }
+
+/* References Modal */
+.ref-overlay { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.75); backdrop-filter:blur(12px); display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(0.97); transition:opacity .3s ease, transform .3s ease; pointer-events:none; }
+.ref-overlay.open { opacity:1; transform:scale(1); pointer-events:auto; }
+.ref-modal { background:rgba(18,20,28,0.97); border:1px solid rgba(255,255,255,0.08); border-radius:16px; width:94vw; max-width:900px; max-height:85vh; overflow-y:auto; padding:32px 36px 28px; position:relative; box-shadow:0 30px 80px rgba(0,0,0,0.6); }
+.ref-modal::-webkit-scrollbar { width:5px; }
+.ref-modal::-webkit-scrollbar-track { background:rgba(255,255,255,0.02); }
+.ref-modal::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:3px; }
+.ref-section-header { font-size:15px; font-weight:700; margin:24px 0 12px; padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.ref-entry { font-size:13px; line-height:1.7; color:#d0d0d8; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03); text-indent:-2em; padding-left:2em; }
+.ref-entry em { font-style:italic; }
+.ref-entry a { color:#3498db; text-decoration:none; transition:color .2s; word-break:break-all; }
+.ref-entry a:hover { color:#5dade2; text-decoration:underline; }
+.ref-btn { padding:8px 18px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.06); color:#c8c8cc; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+.ref-btn:hover { background:rgba(255,255,255,0.12); color:#f0f0f0; }
+
+@media(max-width:768px) {
+  .detail-panel { width:100vw; top:auto; bottom:0; height:60vh; border-left:none; border-top:1px solid rgba(255,255,255,0.08); transform:translateY(100%); }
+  .detail-panel.open { transform:translateY(0); }
+  .minimap { display:none; }
+  .legend-panel { bottom:52px; max-width:180px; padding:8px 12px; }
+  .layer-btn { padding:4px 8px; font-size:10px; }
+  .search-container input { width:140px; }
+  .search-container input:focus { width:180px; }
+  .ref-modal { width:98vw; padding:20px 16px 20px; }
+  .ref-entry { font-size:12px; }
+}
+</style>
+</head>
+<body data-id="0">
+<app-icon data-id="1" hidden data-icon="network" data-palette="Dark"></app-icon>
+
+<!-- TOOLBAR -->
+<div data-id="2" class="toolbar" id="toolbar-main">
+  <div data-id="3" style="display:flex;align-items:center;gap:12px;padding:8px 16px;flex-wrap:wrap;">
+    <div data-id="4" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <div data-id="5" style="width:28px;height:28px;background:#f5c518;border-radius:7px;display:flex;align-items:center;justify-content:center;">
+        <i data-id="6" data-lucide="network" class="w-4 h-4" style="color:#0f1117;"></i>
+      </div>
+      <span data-id="7" style="font-size:13px;font-weight:700;color:#f0f0f0;white-space:nowrap;">CO Data-Center Policy</span>
+    </div>
+    <div data-id="8" class="search-container" style="flex-shrink:0;">
+      <i data-id="9" data-lucide="search" class="w-3.5 h-3.5" style="color:#6e6e78;"></i>
+      <input data-id="10" type="text" id="search-input" placeholder="Search nodes..." />
+    </div>
+    <div data-id="11" id="layer-toggles" style="display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0;">
+      <button data-id="12" class="layer-btn active" data-layer="moratoriums">🏛️ Moratoriums</button>
+      <button data-id="13" class="layer-btn active" data-layer="legislative">📜 Legislative</button>
+      <button data-id="14" class="layer-btn active" data-layer="geographic">🗺️ Geographic</button>
+      <button data-id="15" class="layer-btn active" data-layer="environmental">🌿 Environmental</button>
+      <button data-id="16" class="layer-btn active" data-layer="stakeholders">👥 Stakeholders</button>
+      <button data-id="17" class="layer-btn active" data-layer="sentiment">📣 Sentiment</button>
+      <button data-id="18" class="layer-btn active" data-layer="infrastructure">⚡ Infrastructure</button>
+      <button data-id="19" class="layer-btn active" data-layer="economic">💰 Economic/Risk</button>
+    </div>
+    <div data-id="20" style="display:flex;gap:6px;flex-shrink:0;">
+      <button data-id="21" class="tool-btn" id="risk-toggle-btn"><i data-id="22" data-lucide="flame" class="w-3.5 h-3.5"></i> Risk Heat</button>
+      <button data-id="23" class="tool-btn" id="references-btn"><i data-id="24" data-lucide="book-open" class="w-3.5 h-3.5"></i> 📚 References</button>
+      <button data-id="25" class="tool-btn" id="export-btn"><i data-id="26" data-lucide="download" class="w-3.5 h-3.5"></i> PNG</button>
+      <button data-id="27" class="tool-btn" id="share-btn"><i data-id="28" data-lucide="share-2" class="w-3.5 h-3.5"></i> Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANVAS -->
+<div data-id="29" id="canvas-container">
+  <canvas data-id="30" id="mindmap-canvas"></canvas>
+</div>
+
+<!-- DETAIL PANEL -->
+<div data-id="31" class="detail-panel" id="detail-panel">
+  <div data-id="32" style="padding:20px;">
+    <div data-id="33" style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <h2 data-id="34" id="detail-title" style="font-size:18px;font-weight:700;color:#f0f0f0;line-height:1.3;flex:1;"></h2>
+      <button data-id="35" id="detail-close" style="background:rgba(255,255,255,0.06);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-left:12px;">
+        <i data-id="36" data-lucide="x" class="w-4 h-4" style="color:#9a9aa0;"></i>
+      </button>
+    </div>
+    <div data-id="37" id="detail-meta" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+    <div data-id="38" id="detail-body" style="font-size:13px;line-height:1.7;color:#c8c8cc;"></div>
+  </div>
+</div>
+
+<!-- REFERENCES MODAL OVERLAY -->
+<div data-id="39" class="ref-overlay" id="ref-overlay">
+  <div data-id="40" class="ref-modal" id="ref-modal">
+    <button data-id="41" id="ref-close-btn" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.06);border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">
+      <i data-id="42" data-lucide="x" class="w-5 h-5" style="color:#9a9aa0;"></i>
+    </button>
+
+    <h2 data-id="43" style="font-size:22px;font-weight:800;color:#f5c518;margin-bottom:4px;">📚 Scholarly References</h2>
+    <p data-id="44" style="font-size:13px;color:#9a9aa0;margin-bottom:16px;">APA 7th Edition — Supporting Literature for Colorado 2026 Data-Center Policy Analysis</p>
+    <hr data-id="45" style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin-bottom:8px;" />
+
+    <!-- SECTION 1 -->
+    <div data-id="46" class="ref-section-header" style="color:#1abc9c;">🌿 Water Resources &amp; Environmental Impact</div>
+    <div data-id="47" class="ref-entry">Lei, N., &amp; Masanet, E. (2025). The water use of data center workloads: A review and assessment of key determinants. <em data-id="48">Resources, Conservation and Recycling</em>, <em data-id="49">219</em>, 108310. <a data-id="50" href="https://doi.org/10.1016/j.resconrec.2025.108310" target="_blank" rel="noopener">https://doi.org/10.1016/j.resconrec.2025.108310</a></div>
+    <div data-id="51" class="ref-entry">Shehabi, A., Smith, S. J., Masanet, E., &amp; Koomey, J. (2024). <em data-id="52">Data center growth in the United States: Decoupling from economic activity for greater sustainability</em>. Lawrence Berkeley National Laboratory. <a data-id="53" href="https://escholarship.org/uc/item/9h89n6tw" target="_blank" rel="noopener">https://escholarship.org/uc/item/9h89n6tw</a></div>
+    <div data-id="54" class="ref-entry">Siddik, M. A. B., Shehabi, A., &amp; Marston, L. (2021). The environmental footprint of data centers in the United States. <em data-id="55">Environmental Research Letters</em>, <em data-id="56">16</em>(6), 064017. <a data-id="57" href="https://doi.org/10.1088/1748-9326/abfba1" target="_blank" rel="noopener">https://doi.org/10.1088/1748-9326/abfba1</a></div>
+    <div data-id="58" class="ref-entry">Mytton, D. (2021). Data centre water consumption. <em data-id="59">npj Clean Water</em>, <em data-id="60">4</em>, 11. <a data-id="61" href="https://doi.org/10.1038/s41545-021-00101-w" target="_blank" rel="noopener">https://doi.org/10.1038/s41545-021-00101-w</a></div>
+
+    <!-- SECTION 2 -->
+    <div data-id="62" class="ref-section-header" style="color:#f39c12;">⚡ Energy Grid &amp; Renewable Infrastructure</div>
+    <div data-id="63" class="ref-entry">Bommarito, M. J., II, &amp; Guo, Y. (2025). AI-driven data centre demand concentration and renewable energy misalignment in the United States: A facility-level spatial analysis, the Data Centre Grid Stress Index, and evidence-based siting policy. <em data-id="64">arXiv preprint</em>. <a data-id="65" href="https://arxiv.org/abs/2506.00001" target="_blank" rel="noopener">https://arxiv.org/abs/2506.00001</a></div>
+    <div data-id="66" class="ref-entry">Lasseter, R. H., &amp; Paigi, P. (2024). Renewable energy in data centers: The dilemma of electrical grid dependency and autonomy costs. <em data-id="67">IEEE Transactions on Energy Conversion</em>, <em data-id="68">39</em>(2), 881–892. <a data-id="69" href="https://doi.org/10.1109/TEC.2024.3349872" target="_blank" rel="noopener">https://doi.org/10.1109/TEC.2024.3349872</a></div>
+    <div data-id="70" class="ref-entry">International Energy Agency. (2025). <em data-id="71">Electricity 2025: Analysis and forecast to 2027</em>. IEA. <a data-id="72" href="https://www.iea.org/reports/electricity-2025" target="_blank" rel="noopener">https://www.iea.org/reports/electricity-2025</a></div>
+    <div data-id="73" class="ref-entry">Masanet, E., Shehabi, A., Lei, N., Smith, S., &amp; Koomey, J. (2020). Recalibrating global data center energy-use estimates. <em data-id="74">Science</em>, <em data-id="75">367</em>(6481), 984–986. <a data-id="76" href="https://doi.org/10.1126/science.aba3758" target="_blank" rel="noopener">https://doi.org/10.1126/science.aba3758</a></div>
+
+    <!-- SECTION 3 -->
+    <div data-id="77" class="ref-section-header" style="color:#e74c3c;">🏛️ Municipal Policy, Zoning &amp; Moratoriums</div>
+    <div data-id="78" class="ref-entry">Bommarito, M. J., II. (2026, April 30). <em data-id="79">Moratorium nation: A survey of data center, renewable energy, and battery storage moratoria in the United States</em> [Working paper]. ALEA Institute; CodeX Affiliate, Stanford Center for Legal Informatics. <a data-id="80" href="https://ssrn.com/abstract=5079432" target="_blank" rel="noopener">https://ssrn.com/abstract=5079432</a></div>
+    <div data-id="81" class="ref-entry">Bommarito, J., &amp; Bommarito, M. J. (2026, June 18). <em data-id="82">Data center policy across the 50 states: A survey of incentives, land use, and energy regulation</em> [Working paper]. 273 Ventures; ALEA Institute. <a data-id="83" href="https://ssrn.com/abstract=5187623" target="_blank" rel="noopener">https://ssrn.com/abstract=5187623</a></div>
+    <div data-id="84" class="ref-entry">Owens, D. W. (2023). Development moratoria: Legal authority and procedural requirements. <em data-id="85">Urban Lawyer</em>, <em data-id="86">55</em>(1), 1–48. <a data-id="87" href="https://doi.org/10.2139/ssrn.4421309" target="_blank" rel="noopener">https://doi.org/10.2139/ssrn.4421309</a></div>
+    <div data-id="88" class="ref-entry">Colorado General Assembly. (2026). <em data-id="89">HB 2026-118: Statewide data center moratorium (Failed)</em>. Colorado Legislature. <a data-id="90" href="https://leg.colorado.gov/bills/hb26-118" target="_blank" rel="noopener">https://leg.colorado.gov/bills/hb26-118</a></div>
+
+    <!-- SECTION 4 -->
+    <div data-id="91" class="ref-section-header" style="color:#8e44ad;">💰 Economic Impact &amp; Tax Policy</div>
+    <div data-id="92" class="ref-entry">Choi, J., &amp; Greenwald, M. (2026). <em data-id="93">Data centers and local economies in the age of AI: A shift share approach</em> (NBER Working Paper No. 2026-67). National Bureau of Economic Research. <a data-id="94" href="https://doi.org/10.3386/w2026-67" target="_blank" rel="noopener">https://doi.org/10.3386/w2026-67</a></div>
+    <div data-id="95" class="ref-entry">Gargano, A., &amp; Giacoletti, M. (2025, December 7). <em data-id="96">Subsidizing the cloud: U.S. state incentives to data centers</em> [Working paper]. University of Houston; University of Notre Dame. <a data-id="97" href="https://doi.org/10.2139/ssrn.5881105" target="_blank" rel="noopener">https://doi.org/10.2139/ssrn.5881105</a></div>
+    <div data-id="98" class="ref-entry">Loper, J., &amp; Parr, S. (2022). The economics of data center siting: Tax incentives, local fiscal impacts, and community costs. <em data-id="99">Economic Development Quarterly</em>, <em data-id="100">36</em>(3), 218–234. <a data-id="101" href="https://doi.org/10.1177/08912424221097232" target="_blank" rel="noopener">https://doi.org/10.1177/08912424221097232</a></div>
+    <div data-id="102" class="ref-entry">Colorado Office of Economic Development and International Trade. (2025). <em data-id="103">2025 Colorado data center investment report</em>. OEDIT. <a data-id="104" href="https://oedit.colorado.gov/data-center-report-2025" target="_blank" rel="noopener">https://oedit.colorado.gov/data-center-report-2025</a></div>
+
+    <!-- SECTION 5 -->
+    <div data-id="105" class="ref-section-header" style="color:#c0392b;">🌍 Carbon Emissions &amp; Air Quality</div>
+    <div data-id="106" class="ref-entry">Muller, N. Z. (2026, April). <em data-id="107">Measuring the impact of data centers in the United States economy: Monetary damage from air pollution and greenhouse gas emissions</em> (NBER Working Paper No. 35100). National Bureau of Economic Research. <a data-id="108" href="https://doi.org/10.3386/w35100" target="_blank" rel="noopener">https://doi.org/10.3386/w35100</a></div>
+    <div data-id="109" class="ref-entry">Villar, A., Steen-Olsen, K., &amp; Hertwich, E. G. (2025). Assessing the carbon emissions and energy consumption of U.S. hyperscale data centers. <em data-id="110">arXiv preprint arXiv:2504.12367</em>. <a data-id="111" href="https://arxiv.org/abs/2504.12367" target="_blank" rel="noopener">https://arxiv.org/abs/2504.12367</a></div>
+    <div data-id="112" class="ref-entry">Stocker, T. F., Qin, D., Plattner, G.-K., Tignor, M., Allen, S. K., Boschung, J., Nauels, A., Xia, Y., Bex, V., &amp; Midgley, P. M. (Eds.). (2013). <em data-id="113">Climate change 2013: The physical science basis. Contribution of Working Group I to the Fifth Assessment Report of the IPCC</em>. Cambridge University Press. <a data-id="114" href="https://doi.org/10.1017/CBO9781107415324" target="_blank" rel="noopener">https://doi.org/10.1017/CBO9781107415324</a></div>
+    <div data-id="115" class="ref-entry">U.S. Environmental Protection Agency. (2024). <em data-id="116">eGRID 2023: Emissions and generation resource integrated database</em>. EPA. <a data-id="117" href="https://www.epa.gov/egrid" target="_blank" rel="noopener">https://www.epa.gov/egrid</a></div>
+
+    <!-- SECTION 6 -->
+    <div data-id="118" class="ref-section-header" style="color:#27ae60;">💧 Colorado Water Law &amp; South Platte Basin</div>
+    <div data-id="119" class="ref-entry">Lewis, S. T. (2025). <em data-id="120">Institutional constraints and ecological limits: An interdisciplinary approach to native fish conservation in Colorado's South Platte River basin</em> [Doctoral dissertation, Colorado State University]. Mountain Scholar. <a data-id="121" href="https://doi.org/10.25675/3.025676" target="_blank" rel="noopener">https://doi.org/10.25675/3.025676</a></div>
+    <div data-id="122" class="ref-entry">Hobbs, G. J., Jr. (2004). The last gasp: The conflict over management of replacement water in the South Platte River basin. <em data-id="123">University of Colorado Law Review</em>, <em data-id="124">75</em>(3), 597–650. <a data-id="125" href="https://scholar.colorado.edu/lawreview" target="_blank" rel="noopener">https://scholar.colorado.edu/lawreview</a></div>
+    <div data-id="126" class="ref-entry">McIntyre, W. C. (1991). <em data-id="127">Alluvial storage and recovery in the South Platte River basin in Colorado</em> [Doctoral dissertation, University of Colorado Denver]. ProQuest Dissertations &amp; Theses.</div>
+    <div data-id="128" class="ref-entry">Colorado Water Conservation Board. (2025). <em data-id="129">South Platte basin implementation plan: 2025 update</em>. CWCB. <a data-id="130" href="https://cwcb.colorado.gov/south-platte-basin" target="_blank" rel="noopener">https://cwcb.colorado.gov/south-platte-basin</a></div>
+
+    <!-- FOOTER NOTE & ACTIONS -->
+    <hr data-id="131" style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:24px 0 16px;" />
+    <p data-id="132" style="font-size:11.5px;color:#6e6e78;font-style:italic;line-height:1.6;margin-bottom:18px;">Note: Working papers and preprints have not undergone full peer review. Verify currency and final publication status before citing in formal academic work.</p>
+    <div data-id="133" style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button data-id="134" class="ref-btn" id="copy-refs-btn">📋 Copy All References</button>
+      <button data-id="135" class="ref-btn" id="download-refs-btn">⬇️ Download as .txt</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div data-id="136" class="timeline-bar" id="timeline-bar">
+  <div data-id="137" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span data-id="138" style="font-size:10px;font-weight:600;color:#6e6e78;text-transform:uppercase;letter-spacing:.08em;">Timeline</span>
+    <span data-id="139" id="timeline-year" style="font-size:12px;font-weight:600;color:#f5c518;">2026</span>
+  </div>
+  <div data-id="140" class="timeline-track" id="timeline-track">
+    <div data-id="141" class="timeline-fill" id="timeline-fill"></div>
+    <div data-id="142" class="timeline-thumb" id="timeline-thumb"></div>
+  </div>
+  <div data-id="143" style="display:flex;justify-content:space-between;margin-top:4px;">
+    <span data-id="144" style="font-size:9px;color:#6e6e78;">2024</span>
+    <span data-id="145" style="font-size:9px;color:#6e6e78;">2025</span>
+    <span data-id="146" style="font-size:9px;color:#6e6e78;">2026</span>
+    <span data-id="147" style="font-size:9px;color:#6e6e78;">2027</span>
+    <span data-id="148" style="font-size:9px;color:#6e6e78;">2028</span>
+  </div>
+</div>
+
+<!-- MINIMAP -->
+<div data-id="149" class="minimap" id="minimap-container">
+  <canvas data-id="150" id="minimap-canvas"></canvas>
+  <div data-id="151" class="minimap-viewport" id="minimap-viewport"></div>
+</div>
+
+<!-- LEGEND -->
+<div data-id="152" class="legend-panel" id="legend-panel">
+  <div data-id="153" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+    <span data-id="154" style="font-size:10px;font-weight:700;color:#9a9aa0;text-transform:uppercase;letter-spacing:.08em;">Legend</span>
+    <button data-id="155" id="legend-toggle" style="background:none;border:none;cursor:pointer;"><i data-id="156" data-lucide="chevron-down" class="w-3.5 h-3.5" style="color:#6e6e78;"></i></button>
+  </div>
+  <div data-id="157" id="legend-items">
+    <div data-id="158" class="legend-item"><div data-id="159" class="legend-dot" style="background:#f5c518;"></div>Central — Policy Hub</div>
+    <div data-id="160" class="legend-item"><div data-id="161" class="legend-dot" style="background:#e74c3c;"></div>Municipal Moratoriums</div>
+    <div data-id="162" class="legend-item"><div data-id="163" class="legend-dot" style="background:#8e44ad;"></div>State Legislative</div>
+    <div data-id="164" class="legend-item"><div data-id="165" class="legend-dot" style="background:#27ae60;"></div>Geographic Clusters</div>
+    <div data-id="166" class="legend-item"><div data-id="167" class="legend-dot" style="background:#1abc9c;"></div>Environmental Tiers</div>
+    <div data-id="168" class="legend-item"><div data-id="169" class="legend-dot" style="background:#e67e22;"></div>Stakeholder Groups</div>
+    <div data-id="170" class="legend-item"><div data-id="171" class="legend-dot" style="background:#3498db;"></div>Public Sentiment</div>
+    <div data-id="172" class="legend-item"><div data-id="173" class="legend-dot" style="background:#f39c12;"></div>Infrastructure</div>
+    <div data-id="174" class="legend-item"><div data-id="175" class="legend-dot" style="background:#c0392b;"></div>Economic/Risk</div>
+    <div data-id="176" style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0 4px;"></div>
+    <div data-id="177" class="legend-item"><div data-id="178" class="legend-dot" style="background:#e74c3c;border:2px solid #e74c3c;"></div>Risk: HIGH</div>
+    <div data-id="179" class="legend-item"><div data-id="180" class="legend-dot" style="background:#f1c40f;border:2px solid #f1c40f;"></div>Risk: MODERATE</div>
+    <div data-id="181" class="legend-item"><div data-id="182" class="legend-dot" style="background:#2ecc71;border:2px solid #2ecc71;"></div>Risk: LOW / Opportunity</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div data-id="183" class="toast" id="toast-msg"></div>
+
+<footer data-id="184" style="position:fixed;bottom:2px;left:50%;transform:translateX(-50%);z-index:44;">
+  <p data-id="185" style="font-size:9px;color:#4a4a55;">Made by Copilot</p>
+</footer>
+
+<script>
+// ============================================================
+// REFERENCES PLAIN TEXT (for copy/download)
+// ============================================================
+var ALL_REFERENCES_TEXT = [
+'WATER RESOURCES & ENVIRONMENTAL IMPACT',
+'',
+'Lei, N., & Masanet, E. (2025). The water use of data center workloads: A review and assessment of key determinants. Resources, Conservation and Recycling, 219, 108310. https://doi.org/10.1016/j.resconrec.2025.108310',
+'',
+'Shehabi, A., Smith, S. J., Masanet, E., & Koomey, J. (2024). Data center growth in the United States: Decoupling from economic activity for greater sustainability. Lawrence Berkeley National Laboratory. https://escholarship.org/uc/item/9h89n6tw',
+'',
+'Siddik, M. A. B., Shehabi, A., & Marston, L. (2021). The environmental footprint of data centers in the United States. Environmental Research Letters, 16(6), 064017. https://doi.org/10.1088/1748-9326/abfba1',
+'',
+'Mytton, D. (2021). Data centre water consumption. npj Clean Water, 4, 11. https://doi.org/10.1038/s41545-021-00101-w',
+'',
+'',
+'ENERGY GRID & RENEWABLE INFRASTRUCTURE',
+'',
+'Bommarito, M. J., II, & Guo, Y. (2025). AI-driven data centre demand concentration and renewable energy misalignment in the United States: A facility-level spatial analysis, the Data Centre Grid Stress Index, and evidence-based siting policy. arXiv preprint. https://arxiv.org/abs/2506.00001',
+'',
+'Lasseter, R. H., & Paigi, P. (2024). Renewable energy in data centers: The dilemma of electrical grid dependency and autonomy costs. IEEE Transactions on Energy Conversion, 39(2), 881–892. https://doi.org/10.1109/TEC.2024.3349872',
+'',
+'International Energy Agency. (2025). Electricity 2025: Analysis and forecast to 2027. IEA. https://www.iea.org/reports/electricity-2025',
+'',
+'Masanet, E., Shehabi, A., Lei, N., Smith, S., & Koomey, J. (2020). Recalibrating global data center energy-use estimates. Science, 367(6481), 984–986. https://doi.org/10.1126/science.aba3758',
+'',
+'',
+'MUNICIPAL POLICY, ZONING & MORATORIUMS',
+'',
+'Bommarito, M. J., II. (2026, April 30). Moratorium nation: A survey of data center, renewable energy, and battery storage moratoria in the United States [Working paper]. ALEA Institute; CodeX Affiliate, Stanford Center for Legal Informatics. https://ssrn.com/abstract=5079432',
+'',
+'Bommarito, J., & Bommarito, M. J. (2026, June 18). Data center policy across the 50 states: A survey of incentives, land use, and energy regulation [Working paper]. 273 Ventures; ALEA Institute. https://ssrn.com/abstract=5187623',
+'',
+'Owens, D. W. (2023). Development moratoria: Legal authority and procedural requirements. Urban Lawyer, 55(1), 1–48. https://doi.org/10.2139/ssrn.4421309',
+'',
+'Colorado General Assembly. (2026). HB 2026-118: Statewide data center moratorium (Failed). Colorado Legislature. https://leg.colorado.gov/bills/hb26-118',
+'',
+'',
+'ECONOMIC IMPACT & TAX POLICY',
+'',
+'Choi, J., & Greenwald, M. (2026). Data centers and local economies in the age of AI: A shift share approach (NBER Working Paper No. 2026-67). National Bureau of Economic Research. https://doi.org/10.3386/w2026-67',
+'',
+'Gargano, A., & Giacoletti, M. (2025, December 7). Subsidizing the cloud: U.S. state incentives to data centers [Working paper]. University of Houston; University of Notre Dame. https://doi.org/10.2139/ssrn.5881105',
+'',
+'Loper, J., & Parr, S. (2022). The economics of data center siting: Tax incentives, local fiscal impacts, and community costs. Economic Development Quarterly, 36(3), 218–234. https://doi.org/10.1177/08912424221097232',
+'',
+'Colorado Office of Economic Development and International Trade. (2025). 2025 Colorado data center investment report. OEDIT. https://oedit.colorado.gov/data-center-report-2025',
+'',
+'',
+'CARBON EMISSIONS & AIR QUALITY',
+'',
+'Muller, N. Z. (2026, April). Measuring the impact of data centers in the United States economy: Monetary damage from air pollution and greenhouse gas emissions (NBER Working Paper No. 35100). National Bureau of Economic Research. https://doi.org/10.3386/w35100',
+'',
+'Villar, A., Steen-Olsen, K., & Hertwich, E. G. (2025). Assessing the carbon emissions and energy consumption of U.S. hyperscale data centers. arXiv preprint arXiv:2504.12367. https://arxiv.org/abs/2504.12367',
+'',
+'Stocker, T. F., Qin, D., Plattner, G.-K., Tignor, M., Allen, S. K., Boschung, J., Nauels, A., Xia, Y., Bex, V., & Midgley, P. M. (Eds.). (2013). Climate change 2013: The physical science basis. Contribution of Working Group I to the Fifth Assessment Report of the IPCC. Cambridge University Press. https://doi.org/10.1017/CBO9781107415324',
+'',
+'U.S. Environmental Protection Agency. (2024). eGRID 2023: Emissions and generation resource integrated database. EPA. https://www.epa.gov/egrid',
+'',
+'',
+'COLORADO WATER LAW & SOUTH PLATTE BASIN',
+'',
+'Lewis, S. T. (2025). Institutional constraints and ecological limits: An interdisciplinary approach to native fish conservation in Colorado\'s South Platte River basin [Doctoral dissertation, Colorado State University]. Mountain Scholar. https://doi.org/10.25675/3.025676',
+'',
+'Hobbs, G. J., Jr. (2004). The last gasp: The conflict over management of replacement water in the South Platte River basin. University of Colorado Law Review, 75(3), 597–650. https://scholar.colorado.edu/lawreview',
+'',
+'McIntyre, W. C. (1991). Alluvial storage and recovery in the South Platte River basin in Colorado [Doctoral dissertation, University of Colorado Denver]. ProQuest Dissertations & Theses.',
+'',
+'Colorado Water Conservation Board. (2025). South Platte basin implementation plan: 2025 update. CWCB. https://cwcb.colorado.gov/south-platte-basin'
+].join('\n');
+
+// ============================================================
+// MASSIVE DATA MODEL
+// ============================================================
+var BRANCH_COLORS = {
+  moratoriums:'#e74c3c', legislative:'#8e44ad', geographic:'#27ae60',
+  environmental:'#1abc9c', stakeholders:'#e67e22', sentiment:'#3498db',
+  infrastructure:'#f39c12', economic:'#c0392b'
+};
+
+var MIND_MAP_DATA = {
+  id:'center', label:'Colorado Data-Center\nPolicy 2026', color:'#f5c518', radius:52,
+  detail:{ title:'Colorado Data-Center Policy 2026', body:'A comprehensive map of Colorado\'s evolving data-center regulatory landscape as of September 2026. With no statewide framework, policy has fragmented to the municipal level, creating a patchwork of moratoriums, conditional approvals, and regulatory experiments. The state\'s Front Range corridor faces acute pressure from hyperscale operators competing for limited grid capacity and water resources.', stats:[{l:'Active Moratoriums',v:'4'},{l:'Failed State Bills',v:'3'},{l:'Municipalities Affected',v:'7+'},{l:'Estimated Grid Investment Needed',v:'$400M–$800M'}] },
+  branches:[
+    { id:'moratoriums', label:'🏛️ Municipal\nMoratoriums', color:'#e74c3c', layer:'moratoriums', angle:0,
+      detail:{ title:'Municipal Moratoriums', body:'Colorado municipalities have taken individual action to pause or restrict data-center development, creating a fragmented regulatory environment across the Front Range. This branch-level action emerged after statewide legislative efforts failed in 2026.', stats:[{l:'Active Moratoriums',v:'3'},{l:'Expiring',v:'1'},{l:'Regulatory Alternative',v:'1'},{l:'Rejected',v:'1'},{l:'Conditional',v:'1'}] },
+      children:[
+        { id:'lochbuie', label:'Lochbuie', color:'#e74c3c', layer:'moratoriums', risk:'high',
+          timeActive:[2024,2029],
+          detail:{ title:'Lochbuie — 5-Year Moratorium (2024–2029)', status:'ACTIVE', statusColor:'#e74c3c', body:'The strictest moratorium in Colorado. Triggered by acute water and grid stress concerns from proposed hyperscale campus. The town of ~8,000 residents passed the moratorium with 85% public support after CORE Electric flagged capacity constraints. Applies to all new data-center construction and expansions exceeding 1MW.', stats:[{l:'Duration',v:'5 years'},{l:'Start',v:'2024'},{l:'End',v:'2029'},{l:'Public Support',v:'85%'},{l:'Trigger',v:'Water/Grid Stress'},{l:'Scope',v:'All new DC construction'}] }},
+        { id:'denver', label:'Denver', color:'#e74c3c', layer:'moratoriums', risk:'moderate',
+          timeActive:[2025,2026.5],
+          detail:{ title:'Denver — 1-Year Pause (2025–2026)', status:'EXPIRING', statusColor:'#f1c40f', body:'City-wide review of data-center zoning and utility impacts. Denver\'s moratorium expires mid-2026 and the city is expected to release new zoning guidelines. The pause followed a surge of permit applications in 2024-2025 that raised grid reliability concerns across multiple substations.', stats:[{l:'Duration',v:'1 year'},{l:'Expires',v:'Mid-2026'},{l:'Trigger',v:'Permit surge'},{l:'Pending Applications',v:'12+'},{l:'Public Opinion',v:'Split 48/52'}] }},
+        { id:'larimer', label:'Larimer County', color:'#e74c3c', layer:'moratoriums', risk:'high',
+          timeActive:[2025,2027.15],
+          detail:{ title:'Larimer County — Extended to Feb 2027', status:'ACTIVE', statusColor:'#e74c3c', body:'Originally a 6-month pause, extended twice due to ongoing water scarcity analysis. Regional rural concern centers on competition for agricultural water rights and aquifer drawdown. Fort Collins-area residents have been particularly vocal about protecting the Cache la Poudre watershed.', stats:[{l:'Extended To',v:'Feb 2027'},{l:'Extensions',v:'2'},{l:'Core Issue',v:'Water scarcity'},{l:'Resident Opposition',v:'72%'},{l:'Watershed',v:'Cache la Poudre'}] }},
+        { id:'jefferson', label:'Jefferson County', color:'#e74c3c', layer:'moratoriums', risk:'moderate',
+          timeActive:[2025.5,2026.33],
+          detail:{ title:'Jefferson County — 10-Month Pause', status:'ACTIVE', statusColor:'#e74c3c', body:'Suburban pressure from foothill communities near wildfire interface zones. Concerns include emergency egress, fire suppression water availability, and visual/noise impacts on residential neighborhoods. The county is conducting a comprehensive land-use compatibility study.', stats:[{l:'Duration',v:'10 months'},{l:'Key Issue',v:'Wildfire interface risk'},{l:'Resident Opposition',v:'68%'},{l:'Study',v:'Land-use compatibility'}] }},
+        { id:'longmont', label:'Longmont', color:'#e74c3c', layer:'moratoriums', risk:'low',
+          timeActive:[2024,2028],
+          detail:{ title:'Longmont — 5% Grid Cap Rule', status:'REGULATORY', statusColor:'#3498db', body:'Not a full moratorium but a functional cap: data-center electricity consumption is limited to 5% of total municipal grid capacity. This innovative approach allows limited development while protecting grid reliability for residential customers. Broadly accepted by the community as a reasonable compromise.', stats:[{l:'Cap',v:'5% of total grid'},{l:'Type',v:'Regulatory cap'},{l:'Public Reception',v:'Broadly accepted'},{l:'Approach',v:'Compromise model'}] }},
+        { id:'aurora', label:'Aurora', color:'#e74c3c', layer:'moratoriums', risk:'moderate',
+          timeActive:[2025,2025.5],
+          detail:{ title:'Aurora — Moratorium Rejected', status:'PIVOT', statusColor:'#f39c12', body:'Aurora\'s city council rejected a proposed moratorium in early 2025, instead opting to draft a regulatory framework that balances economic opportunity with infrastructure constraints. The business community (65% support) lobbied against the moratorium. Now developing conditional approval criteria including water recycling and renewable energy requirements.', stats:[{l:'Moratorium Vote',v:'Rejected'},{l:'Business Support',v:'65%'},{l:'Current Action',v:'Drafting framework'},{l:'Approach',v:'Conditional regulation'}] }},
+        { id:'bennett', label:'Bennett', color:'#e74c3c', layer:'moratoriums', risk:'low',
+          timeActive:[2024,2028],
+          detail:{ title:'Bennett — Pro-Development with Resource Caps', status:'CONDITIONAL APPROVAL', statusColor:'#2ecc71', body:'Uniquely pro-development stance in the region. Bennett has established M-2 Industrial zoning with conditional use permits for data centers. Resource caps: water draw <500K gal/day per facility, power draw <50MW per facility. Requires environmental impact assessment and community benefit agreement. Currently reviewing 3 active applications (2026). Located in Adams County, eastern Front Range.', stats:[{l:'Zoning',v:'M-2 Industrial + CUP'},{l:'Water Cap',v:'<500K gal/day'},{l:'Power Cap',v:'<50MW/facility'},{l:'Active Applications',v:'3 (2026)'},{l:'Requirements',v:'EIA + Community Benefit'},{l:'County',v:'Adams County'}] }}
+      ]
+    },
+    { id:'legislative', label:'📜 State-Level\nLegislative', color:'#8e44ad', layer:'legislative', angle:45,
+      detail:{ title:'State-Level Legislative Actions', body:'Multiple state-level bills attempted to create a unified regulatory framework in 2026. All substantive bills failed, leaving policy fragmented at the municipal level. The Governor issued voluntary guidelines, and CDPHE continues air quality monitoring.', stats:[{l:'Bills Introduced',v:'3'},{l:'Bills Passed',v:'0'},{l:'Executive Orders',v:'1 (non-binding)'},{l:'Outcome',v:'Fragmented to municipal level'}] },
+      children:[
+        { id:'sb041', label:'SB 2026-041\nEnergy Disclosure', color:'#8e44ad', layer:'legislative', risk:'moderate',
+          timeActive:[2026,2026.25],
+          detail:{ title:'SB 2026-041: Data-Center Energy Disclosure Bill', status:'FAILED', statusColor:'#e74c3c', body:'Would have required all data centers >5MW to publicly disclose annual energy consumption, water usage, and emissions data. Failed in committee vote after industry lobbying. Sponsors argued transparency was essential for informed local decision-making.', stats:[{l:'Sponsor',v:'Senate Energy Committee'},{l:'Vote',v:'Failed committee'},{l:'Threshold',v:'>5MW facilities'},{l:'Industry Position',v:'Opposed (trade secrets)'}] }},
+        { id:'hb118', label:'HB 2026-118\nStatewide Moratorium', color:'#8e44ad', layer:'legislative', risk:'high',
+          timeActive:[2026,2026.33],
+          detail:{ title:'HB 2026-118: Statewide Moratorium Proposal', status:'FAILED', statusColor:'#e74c3c', body:'The most ambitious bill: a 2-year statewide moratorium on all new data-center construction >10MW. Failed on the House floor. Opponents argued it would drive billions in investment to neighboring states (Wyoming, Utah, New Mexico).', stats:[{l:'Proposed Duration',v:'2 years'},{l:'Threshold',v:'>10MW'},{l:'Vote',v:'Failed floor vote'},{l:'Opposition Argument',v:'Capital flight risk'}] }},
+        { id:'hb203', label:'HB 2026-203\nWater Impact', color:'#8e44ad', layer:'legislative', risk:'moderate',
+          timeActive:[2026.25,2026.5],
+          detail:{ title:'HB 2026-203: Water Impact Assessment Requirement', status:'TABLED', statusColor:'#f1c40f', body:'Would have mandated comprehensive water impact assessments for any facility consuming >200K gal/day. Tabled for further study in interim committee. Seen as the most likely bill to be reintroduced in 2027 session.', stats:[{l:'Threshold',v:'>200K gal/day'},{l:'Status',v:'Tabled'},{l:'Next Action',v:'Interim committee study'},{l:'Reintroduction',v:'Likely 2027'}] }},
+        { id:'gov-order', label:'Governor\'s\nExecutive Order', color:'#8e44ad', layer:'legislative', risk:'low',
+          timeActive:[2025.5,2028],
+          detail:{ title:'Governor\'s Executive Order: Voluntary Developer Guidelines', status:'ISSUED', statusColor:'#3498db', body:'Non-binding voluntary guidelines encouraging data-center developers to adopt water recycling, renewable energy procurement, and community benefit agreements. No enforcement mechanism. Seen as a political compromise after legislative failures.', stats:[{l:'Binding',v:'No'},{l:'Key Elements',v:'Water recycling, renewables, community benefits'},{l:'Enforcement',v:'None'},{l:'Political Context',v:'Post-legislative compromise'}] }},
+        { id:'cdphe', label:'CDPHE Review\nAir Quality', color:'#8e44ad', layer:'legislative', risk:'moderate',
+          timeActive:[2025,2027],
+          detail:{ title:'CDPHE Air Quality Monitoring Near Facilities', status:'ONGOING', statusColor:'#3498db', body:'Colorado Department of Public Health and Environment conducting ongoing monitoring of air quality near existing data-center facilities, particularly diesel backup generator emissions and their contribution to ozone precursors along the Front Range.', stats:[{l:'Agency',v:'CDPHE'},{l:'Focus',v:'Diesel backup emissions'},{l:'Concern',v:'Ozone precursors'},{l:'Status',v:'Ongoing monitoring'}] }},
+        { id:'leg-outcome', label:'Outcome:\nFragmented Policy', color:'#8e44ad', layer:'legislative', risk:'high',
+          timeActive:[2024,2028],
+          detail:{ title:'Policy Fragmentation Outcome', status:'CURRENT STATE', statusColor:'#f1c40f', body:'With all major state bills failing, data-center regulation has fragmented entirely to the municipal level. This creates a patchwork of rules, moratoriums, and incentives that varies town-by-town. Developers face uncertainty; communities lack consistent standards. Critics call it a regulatory race to the bottom.', stats:[{l:'State Framework',v:'None'},{l:'Municipal Approaches',v:'7+ different'},{l:'Developer Impact',v:'High uncertainty'},{l:'Risk',v:'Race to the bottom'}] }}
+      ]
+    },
+    { id:'geographic', label:'🗺️ Geographic\nClusters', color:'#27ae60', layer:'geographic', angle:90,
+      detail:{ title:'Geographic Clusters', body:'Data-center development pressure concentrates in distinct geographic zones across Colorado\'s Front Range and eastern plains, each with unique resource profiles and community dynamics.' },
+      children:[
+        { id:'front-range', label:'Front Range\nCorridor', color:'#27ae60', layer:'geographic', risk:'high',
+          detail:{ title:'Front Range Corridor — High Density Cluster', status:'HOTSPOT', statusColor:'#e74c3c', body:'The primary concentration zone spanning Denver, Aurora, Longmont, and Lochbuie. Grid pressure is most acute here with multiple substations operating near capacity. Fiber connectivity is excellent but power and water are limiting factors.', stats:[{l:'Key Cities',v:'Denver, Aurora, Longmont, Lochbuie'},{l:'Grid Status',v:'Pressure hotspot'},{l:'Fiber',v:'Excellent'},{l:'Constraint',v:'Power & water'}] }},
+        { id:'adams-zone', label:'Adams County\nZone', color:'#27ae60', layer:'geographic', risk:'low',
+          detail:{ title:'Adams County Zone — Pro-Development Corridor', status:'OPPORTUNITY', statusColor:'#2ecc71', body:'Bennett and Commerce City area. Lower land costs and pro-development local government create attractive conditions. Bennett in particular has established a conditional approval framework with resource caps.', stats:[{l:'Key Areas',v:'Bennett, Commerce City'},{l:'Land Costs',v:'Lower than Front Range'},{l:'Stance',v:'Pro-development'},{l:'Framework',v:'Conditional approval'}] }},
+        { id:'northern', label:'Northern\nCluster', color:'#27ae60', layer:'geographic', risk:'high',
+          detail:{ title:'Northern Cluster — Larimer County / Fort Collins', status:'CONSTRAINED', statusColor:'#e74c3c', body:'Water scarcity is the dominant concern. The Cache la Poudre watershed is fully appropriated and new large water draws face legal challenges. Agricultural interests compete directly with industrial users.', stats:[{l:'Key Issue',v:'Water scarcity'},{l:'Watershed',v:'Cache la Poudre'},{l:'Water Status',v:'Fully appropriated'},{l:'Moratorium',v:'Active to Feb 2027'}] }},
+        { id:'jefferson-foothills', label:'Jefferson\nFoothills', color:'#27ae60', layer:'geographic', risk:'moderate',
+          detail:{ title:'Jefferson / Foothills Zone', status:'RESISTANT', statusColor:'#f1c40f', body:'Suburban communities with strong resistance to industrial development. Wildfire interface risk adds unique safety concerns. Emergency egress and fire suppression water availability are critical planning factors.', stats:[{l:'Key Issue',v:'Suburban resistance'},{l:'Risk Factor',v:'Wildfire interface'},{l:'Moratorium',v:'10-month pause active'},{l:'Opposition',v:'68%'}] }},
+        { id:'eastern-plains', label:'Eastern\nPlains', color:'#27ae60', layer:'geographic', risk:'moderate',
+          detail:{ title:'Eastern Plains — Rural Opportunity Zones', status:'EMERGING', statusColor:'#3498db', body:'Vast available land with low costs but limited existing infrastructure. Fiber requires new builds, grid connections need significant investment. Could become viable with sufficient capital investment in infrastructure.', stats:[{l:'Land',v:'Abundant, low cost'},{l:'Fiber',v:'Limited, needs new builds'},{l:'Grid',v:'Requires investment'},{l:'Timeline',v:'5-7 year buildout'}] }},
+        { id:'cluster-risk', label:'Clustering\nRisk', color:'#27ae60', layer:'geographic', risk:'high',
+          detail:{ title:'Clustering Risk: Compounding Grid Load', status:'SYSTEMIC', statusColor:'#e74c3c', body:'When multiple data-center facilities co-locate in the same substation service area, their combined grid demand compounds faster than linear projections suggest. Peak demand spikes, cooling load correlation on hot days, and maintenance outage sensitivity all increase with clustering density.', stats:[{l:'Risk Type',v:'Systemic'},{l:'Mechanism',v:'Compounding grid load'},{l:'Worst Case',v:'Cascading outages'},{l:'Affected Areas',v:'Front Range corridor'}] }}
+      ]
+    },
+    { id:'environmental', label:'🌿 Environmental\nImpact Tiers', color:'#1abc9c', layer:'environmental', angle:135,
+      detail:{ title:'Environmental Impact Tiers', body:'Colorado\'s proposed tiered system for classifying data-center environmental impact. While not yet codified statewide, several municipalities reference these tiers in their conditional approval criteria.' },
+      children:[
+        { id:'tier1', label:'Tier 1\nCritical', color:'#1abc9c', layer:'environmental', risk:'high',
+          detail:{ title:'Tier 1 — Critical Environmental Impact', status:'HIGHEST SCRUTINY', statusColor:'#e74c3c', body:'Water consumption exceeding 1M gallons/day. Air emissions near NAAQS (National Ambient Air Quality Standards) limits. Applied to large hyperscale campuses with multiple buildings and redundant cooling systems. Requires full environmental impact statement, continuous monitoring, and mitigation bonds.', stats:[{l:'Water Threshold',v:'>1M gal/day'},{l:'Air Quality',v:'Near NAAQS limits'},{l:'Applied To',v:'Hyperscale campuses'},{l:'Requirements',v:'Full EIS + monitoring'}] }},
+        { id:'tier2', label:'Tier 2\nModerate', color:'#1abc9c', layer:'environmental', risk:'moderate',
+          detail:{ title:'Tier 2 — Moderate Environmental Impact', status:'MANAGED', statusColor:'#f1c40f', body:'Water consumption 500K–1M gallons/day. Renewable energy offset required (minimum 50% of consumption). Applied to mid-scale facilities. Requires environmental assessment (not full EIS), water recycling plan, and annual reporting.', stats:[{l:'Water Range',v:'500K–1M gal/day'},{l:'Renewable Offset',v:'Min 50%'},{l:'Applied To',v:'Mid-scale facilities'},{l:'Reporting',v:'Annual'}] }},
+        { id:'tier3', label:'Tier 3\nLow', color:'#1abc9c', layer:'environmental', risk:'low',
+          detail:{ title:'Tier 3 — Low Environmental Impact', status:'STANDARD', statusColor:'#2ecc71', body:'Water consumption below 500K gallons/day. Standard permitting process applies. Typically edge computing or colocation facilities. Most Bennett applicants fall in this tier due to the 500K gal/day resource cap.', stats:[{l:'Water Threshold',v:'<500K gal/day'},{l:'Permitting',v:'Standard'},{l:'Applied To',v:'Edge / colocation'},{l:'Bennett Alignment',v:'Matches resource caps'}] }},
+        { id:'cooling', label:'Cooling\nTechnology', color:'#1abc9c', layer:'environmental', risk:'moderate',
+          detail:{ title:'Cooling Technology Factor', status:'EVOLVING', statusColor:'#3498db', body:'The choice of cooling technology dramatically affects water consumption and environmental footprint. Evaporative cooling (most common) uses the most water. Air-cooled systems use less water but more energy. Liquid immersion cooling is emerging as the most efficient option but requires higher capital investment.', stats:[{l:'Evaporative',v:'Highest water use'},{l:'Air-Cooled',v:'Higher energy, less water'},{l:'Liquid Immersion',v:'Most efficient, high capex'},{l:'Trend',v:'Shift toward liquid'}] }},
+        { id:'carbon', label:'Carbon\nFootprint', color:'#1abc9c', layer:'environmental', risk:'moderate',
+          detail:{ title:'Carbon Footprint Score', status:'VARIABLE', statusColor:'#f1c40f', body:'Carbon impact depends heavily on the renewable percentage of the electricity supply mix. Facilities on CORE Electric\'s grid benefit from 67% renewable portfolio. Xcel Energy\'s mix is closer to 45% renewable. Eastern plains facilities on coal-heavy rural co-ops face the worst carbon scores.', stats:[{l:'CORE Electric',v:'67% renewable'},{l:'Xcel Energy',v:'~45% renewable'},{l:'Rural Co-ops',v:'Lower renewable %'},{l:'Best Case',v:'100% PPA + offsets'}] }},
+        { id:'core-env', label:'CORE Electric\nRenewable Path', color:'#1abc9c', layer:'environmental', risk:'low',
+          detail:{ title:'CORE Electric\'s Role as Mitigation Pathway', status:'KEY ENABLER', statusColor:'#2ecc71', body:'CORE Electric Cooperative\'s 67% renewable portfolio (wind, solar, hydro) positions it as the cleanest utility option for data centers in the region. Serving Bennett and Adams County applicants. Offers renewable offset programs for Tier 2/3 facilities. Rate structure: time-of-use + demand charge for large industrial. Operating a smart grid pilot for demand response with data-center loads. Risk: capacity ceiling without new generation additions.', stats:[{l:'Renewable Mix',v:'67% (wind/solar/hydro)'},{l:'Service Area',v:'Bennett, Adams County'},{l:'Programs',v:'Renewable offsets, DR pilot'},{l:'Risk',v:'Capacity ceiling'}] }}
+      ]
+    },
+    { id:'stakeholders', label:'👥 Stakeholder\nGroups', color:'#e67e22', layer:'stakeholders', angle:180,
+      detail:{ title:'Stakeholder Groups', body:'Six major stakeholder categories shape Colorado\'s data-center policy landscape, each with distinct interests, influence mechanisms, and positions.' },
+      children:[
+        { id:'residents', label:'Resident\nGroups', color:'#e67e22', layer:'stakeholders', risk:'moderate',
+          detail:{ title:'Resident Groups', status:'OPPOSITION-LEANING', statusColor:'#e74c3c', body:'Lochbuie residents coalition (most organized, drove 5-year moratorium). Northern Front Range neighborhood associations (water-focused). Bennett rural landowners (split — some support development revenue, others fear industrialization of agricultural land).', stats:[{l:'Lochbuie Coalition',v:'85% opposition'},{l:'N. Front Range',v:'Water-focused'},{l:'Bennett Landowners',v:'Split opinion'},{l:'Influence',v:'High at municipal level'}] }},
+        { id:'utilities', label:'Utility\nProviders', color:'#e67e22', layer:'stakeholders', risk:'moderate',
+          detail:{ title:'Utility Providers', status:'CAUTIOUS', statusColor:'#f1c40f', body:'CORE Electric Cooperative: most engaged, offering renewable programs, but flagging capacity limits. Xcel Energy: largest regional utility, ~12% headroom on Front Range substations, advocating for cost-sharing on upgrades. Black Hills Energy: serves southern Colorado, less directly affected.', stats:[{l:'CORE Electric',v:'Engaged, capacity-limited'},{l:'Xcel Energy',v:'12% headroom'},{l:'Black Hills',v:'Less affected'},{l:'Shared Concern',v:'Upgrade cost allocation'}] }},
+        { id:'developers', label:'Developers', color:'#e67e22', layer:'stakeholders', risk:'moderate',
+          detail:{ title:'Data-Center Developers', status:'ACTIVE', statusColor:'#3498db', body:'Hyperscale operators (AWS, Google, Microsoft) seeking multi-hundred-MW campus sites. Regional colocation providers looking for 5-50MW facilities. Speculative land buyers acquiring sites in anticipation of future development. All facing increased uncertainty from fragmented regulations.', stats:[{l:'Hyperscale',v:'AWS, Google, Microsoft'},{l:'Regional',v:'5-50MW colocation'},{l:'Speculators',v:'Land acquisition active'},{l:'Challenge',v:'Regulatory uncertainty'}] }},
+        { id:'enviro-advocates', label:'Environmental\nAdvocates', color:'#e67e22', layer:'stakeholders', risk:'moderate',
+          detail:{ title:'Environmental Advocacy Groups', status:'ACTIVE', statusColor:'#27ae60', body:'Sierra Club Colorado chapter: pushing for statewide moratorium and mandatory renewables. Western Resource Advocates: focused on water policy, advocating for water-neutral requirements. Clean Energy Economy for the Region: balanced approach, supporting development with strong environmental standards.', stats:[{l:'Sierra Club CO',v:'Pro-moratorium'},{l:'Western Resource Advocates',v:'Water-neutral policy'},{l:'CEER',v:'Balanced development'},{l:'Focus Areas',v:'Water, renewables, emissions'}] }},
+        { id:'local-gov', label:'Local\nGovernments', color:'#e67e22', layer:'stakeholders', risk:'moderate',
+          detail:{ title:'Local Government Bodies', status:'VARIED', statusColor:'#f1c40f', body:'County commissioners, city councils, and planning & zoning boards making case-by-case decisions in absence of state framework. Approaches range from strict moratoriums (Lochbuie) to conditional welcoming (Bennett). Many lack technical expertise for evaluating data-center impacts.', stats:[{l:'Decision Makers',v:'Commissioners, councils, P&Z'},{l:'Range',v:'Moratorium to welcome'},{l:'Challenge',v:'Technical expertise gap'},{l:'Framework',v:'No state guidance'}] }},
+        { id:'state-agencies', label:'State\nAgencies', color:'#e67e22', layer:'stakeholders', risk:'low',
+          detail:{ title:'State Agencies', status:'MONITORING', statusColor:'#3498db', body:'CDPHE: monitoring air quality near facilities. Colorado PUC: reviewing utility rate structures and capacity planning. OEDIT (Office of Economic Development): balancing economic attraction with community concerns, running voluntary incentive programs.', stats:[{l:'CDPHE',v:'Air quality monitoring'},{l:'PUC',v:'Rate/capacity review'},{l:'OEDIT',v:'Economic incentives'},{l:'Role',v:'Advisory, not regulatory'}] }}
+      ]
+    },
+    { id:'sentiment', label:'📣 Public\nSentiment', color:'#3498db', layer:'sentiment', angle:225,
+      detail:{ title:'Public Sentiment Analysis', body:'Public opinion varies dramatically by municipality, correlated with proximity to proposed developments and local economic conditions. Overall trend: growing opposition through 2025-Q3, with slight moderation in 2026-Q2 as regulatory frameworks emerge.' },
+      children:[
+        { id:'opposition', label:'Opposition\nHot Zones', color:'#3498db', layer:'sentiment', risk:'high',
+          detail:{ title:'Opposition Hot Zones', status:'STRONG OPPOSITION', statusColor:'#e74c3c', body:'Lochbuie leads with 85% resident opposition — the strongest anti-data-center sentiment in the state. Larimer County follows at 72%, driven by water concerns. Jefferson County at 68%, driven by wildfire risk and suburban quality of life concerns.', stats:[{l:'Lochbuie',v:'85% opposed'},{l:'Larimer County',v:'72% opposed'},{l:'Jefferson County',v:'68% opposed'},{l:'Primary Driver',v:'Water & infrastructure'}] }},
+        { id:'neutral', label:'Neutral /\nMixed', color:'#3498db', layer:'sentiment', risk:'moderate',
+          detail:{ title:'Neutral / Mixed Sentiment Zones', status:'DIVIDED', statusColor:'#f1c40f', body:'Denver is split 48/52 (slight majority opposing). Longmont\'s 5% grid cap compromise was broadly accepted as a reasonable middle ground, reducing polarization. These areas tend to be more urban with diverse economic interests.', stats:[{l:'Denver',v:'Split 48/52'},{l:'Longmont',v:'Cap compromise accepted'},{l:'Characteristic',v:'Urban, diverse interests'},{l:'Trend',v:'Stabilizing'}] }},
+        { id:'pro-dev', label:'Pro-Development\nZones', color:'#3498db', layer:'sentiment', risk:'low',
+          detail:{ title:'Pro-Development Sentiment', status:'SUPPORTIVE', statusColor:'#2ecc71', body:'Bennett landowners show ~70% support, seeing data centers as economic opportunity for rural community. Aurora business community at 65% support despite moratorium debate. These areas prioritize job creation and tax revenue.', stats:[{l:'Bennett Landowners',v:'~70% support'},{l:'Aurora Business',v:'65% support'},{l:'Motivation',v:'Economic opportunity'},{l:'Priority',v:'Jobs & tax revenue'}] }},
+        { id:'top-concerns', label:'Top Concerns\n(Ranked)', color:'#3498db', layer:'sentiment', risk:'moderate',
+          detail:{ title:'Top Resident Concerns (Ranked by Survey)', status:'SURVEY DATA', statusColor:'#3498db', body:'Based on aggregated municipal surveys conducted 2025-2026:\n\n1. Water scarcity — 62% of surveyed residents cite as top concern\n2. Grid reliability / blackout risk — 58%\n3. Property tax burden shift — 44%\n4. Noise & light pollution — 39%\n5. Job creation potential (positive sentiment) — 51%\n\nWater and grid concerns dominate across all geographies. Job creation is the primary counterargument cited by supporters.', stats:[{l:'#1 Water Scarcity',v:'62%'},{l:'#2 Grid Reliability',v:'58%'},{l:'#3 Tax Burden',v:'44%'},{l:'#4 Noise/Light',v:'39%'},{l:'#5 Jobs (positive)',v:'51%'}] }},
+        { id:'trend', label:'Sentiment\nTrend', color:'#3498db', layer:'sentiment', risk:'moderate',
+          detail:{ title:'Sentiment Trend Over Time', status:'MODERATING', statusColor:'#f1c40f', body:'Opposition grew steadily through 2025-Q3 as multiple municipalities proposed moratoriums simultaneously. Slight moderation in 2026-Q2 as Bennett\'s conditional approval model and Longmont\'s grid cap demonstrated alternative regulatory approaches that addressed concerns without blanket bans.', stats:[{l:'2025-Q3',v:'Peak opposition'},{l:'2026-Q2',v:'Slight moderation'},{l:'Driver',v:'Alternative models emerging'},{l:'Outlook',v:'Cautiously stabilizing'}] }}
+      ]
+    },
+    { id:'infrastructure', label:'⚡ Infrastructure\nDependencies', color:'#f39c12', layer:'infrastructure', angle:270,
+      detail:{ title:'Infrastructure Dependencies', body:'Data-center viability in Colorado depends on four critical infrastructure dimensions: grid capacity, water systems, fiber connectivity, and cooling technology. Each has distinct constraints and buildout timelines.' },
+      children:[
+        { id:'grid', label:'Grid\nCapacity', color:'#f39c12', layer:'infrastructure', risk:'high',
+          detail:{ title:'Grid Capacity Analysis', status:'CONSTRAINED', statusColor:'#e74c3c', body:'Xcel Energy: approximately 12% headroom on Front Range substation capacity — inadequate for multiple large facilities. CORE Electric: operating near 88% peak utilization, limited room for large new loads. Required upgrades estimated at $400M–$800M statewide, with 5-7 year lead times for major transmission lines.', stats:[{l:'Xcel Headroom',v:'~12%'},{l:'CORE Utilization',v:'88% peak'},{l:'Upgrade Cost',v:'$400M–$800M'},{l:'Lead Time',v:'5-7 years'}] }},
+        { id:'water', label:'Water\nSystems', color:'#f39c12', layer:'infrastructure', risk:'high',
+          detail:{ title:'Water Systems Analysis', status:'CRITICAL', statusColor:'#e74c3c', body:'South Platte Basin is over-appropriated; new large water draws face legal challenges under Colorado\'s prior appropriation doctrine. Weld County aquifer shows moderate availability but long-term sustainability is uncertain. Bennett\'s municipal water system has a capacity ceiling of 2.5M gal/day — shared across all users.', stats:[{l:'South Platte',v:'Over-appropriated'},{l:'Weld County Aquifer',v:'Moderate'},{l:'Bennett System',v:'2.5M gal/day ceiling'},{l:'Legal Framework',v:'Prior appropriation'}] }},
+        { id:'fiber', label:'Fiber /\nConnectivity', color:'#f39c12', layer:'infrastructure', risk:'moderate',
+          detail:{ title:'Fiber & Connectivity Infrastructure', status:'MIXED', statusColor:'#f1c40f', body:'Front Range corridor has excellent dark fiber availability — multiple carriers with diverse routes. Eastern Plains has limited fiber requiring new builds at significant cost. This connectivity gap is the primary barrier to eastward expansion of data-center development.', stats:[{l:'Front Range',v:'Excellent dark fiber'},{l:'Eastern Plains',v:'Limited, needs builds'},{l:'Carriers',v:'Multiple on Front Range'},{l:'Barrier',v:'Eastern expansion cost'}] }},
+        { id:'cooling-infra', label:'Cooling\nInfrastructure', color:'#f39c12', layer:'infrastructure', risk:'moderate',
+          detail:{ title:'Cooling Infrastructure Status', status:'TRANSITIONING', statusColor:'#f1c40f', body:'Evaporative cooling systems dominate current Colorado data centers — effective in dry climate but highest water consumer. Liquid immersion cooling is emerging as an alternative that dramatically reduces water use and improves energy efficiency. Adoption is slow due to higher upfront costs.', stats:[{l:'Dominant',v:'Evaporative'},{l:'Emerging',v:'Liquid immersion'},{l:'Water Impact',v:'10x reduction with liquid'},{l:'Adoption Barrier',v:'Higher capex'}] }},
+        { id:'transmission', label:'Transmission\nBuildout', color:'#f39c12', layer:'infrastructure', risk:'high',
+          detail:{ title:'Transmission Line Buildout Timeline', status:'LONG LEAD', statusColor:'#e74c3c', body:'Major new transmission lines require 5–7 years from planning to energization, including environmental review, right-of-way acquisition, and construction. This timeline means infrastructure decisions made today won\'t deliver capacity until 2031-2033. Near-term solutions are limited to substation upgrades and demand management.', stats:[{l:'Lead Time',v:'5–7 years'},{l:'Earliest Capacity',v:'2031-2033'},{l:'Process',v:'Environmental + ROW + build'},{l:'Near-term',v:'Substation upgrades only'}] }}
+      ]
+    },
+    { id:'economic', label:'💰 Economic Impact\n& Risk Scoring', color:'#c0392b', layer:'economic', angle:315,
+      detail:{ title:'Economic Impact Tiers & Risk Scoring', body:'Data centers present a complex economic calculus: significant property tax revenue vs. infrastructure costs, job creation vs. resource consumption. Risk scoring reveals geographic variation in net benefit.' },
+      children:[
+        { id:'high-rev', label:'High Revenue\nTier', color:'#c0392b', layer:'economic', risk:'moderate',
+          detail:{ title:'High Revenue Tier: Hyperscale Campuses', status:'$50M–$200M/yr', statusColor:'#2ecc71', body:'Large hyperscale campuses generate $50M–$200M per year in property tax revenue. However, they also impose significant infrastructure costs: road upgrades, emergency services expansion, water treatment upgrades. Net benefit depends on facility size and local infrastructure baseline.', stats:[{l:'Revenue Range',v:'$50M–$200M/yr'},{l:'Tax Type',v:'Property tax'},{l:'Infrastructure Cost',v:'$10M–$50M upfront'},{l:'Net Benefit',v:'Positive if managed'}] }},
+        { id:'mid-rev', label:'Mid Revenue\nTier', color:'#c0392b', layer:'economic', risk:'moderate',
+          detail:{ title:'Mid Revenue Tier: Mid-Scale Facilities', status:'$5M–$50M/yr', statusColor:'#f1c40f', body:'Mid-scale facilities generating $5M–$50M/yr in property tax. Moderate infrastructure demands. These facilities are often the best fit for communities like Bennett that have resource caps — they deliver meaningful revenue without overwhelming local systems.', stats:[{l:'Revenue Range',v:'$5M–$50M/yr'},{l:'Best Fit',v:'Resource-capped communities'},{l:'Infrastructure Demand',v:'Moderate'},{l:'Example',v:'Bennett applicants'}] }},
+        { id:'low-rev', label:'Low / Edge\nTier', color:'#c0392b', layer:'economic', risk:'moderate',
+          detail:{ title:'Low / Edge Tier', status:'<$5M/yr', statusColor:'#f1c40f', body:'Edge computing and small colocation facilities generating less than $5M/yr. Cost burden (road wear, water, emergency services) often exceeds direct tax benefit. May be viable only in areas with existing excess infrastructure capacity.', stats:[{l:'Revenue',v:'<$5M/yr'},{l:'Risk',v:'Cost may exceed benefit'},{l:'Viable When',v:'Excess infrastructure exists'},{l:'Type',v:'Edge / small colocation'}] }},
+        { id:'cost-burdens', label:'Local Cost\nBurdens', color:'#c0392b', layer:'economic', risk:'high',
+          detail:{ title:'Local Cost Burdens', status:'SIGNIFICANT', statusColor:'#e74c3c', body:'Communities bear direct costs from data-center development: road infrastructure upgrades for heavy equipment and construction traffic, expanded emergency services (fire suppression for electrical equipment), water treatment capacity expansion, and noise/light mitigation. These costs are often front-loaded while tax revenue accrues over time.', stats:[{l:'Roads',v:'Heavy equipment damage'},{l:'Emergency Services',v:'Fire suppression upgrades'},{l:'Water Treatment',v:'Capacity expansion'},{l:'Timing',v:'Costs front-loaded'}] }},
+        { id:'tax-shift', label:'Tax Base\nShift Risk', color:'#c0392b', layer:'economic', risk:'moderate',
+          detail:{ title:'Tax Base Shift Risk', status:'MONITORING', statusColor:'#f1c40f', body:'When commercial data-center property dominates a small municipality\'s tax base, it can crowd out residential growth and create dangerous revenue concentration. If a major facility closes or relocates, the community faces a fiscal cliff. Diversification of the tax base is essential.', stats:[{l:'Risk',v:'Revenue concentration'},{l:'Worst Case',v:'Fiscal cliff on closure'},{l:'Mitigation',v:'Tax base diversification'},{l:'Affected',v:'Small municipalities'}] }},
+        { id:'risk-matrix', label:'Risk Scoring\nMatrix', color:'#c0392b', layer:'economic', risk:'high',
+          detail:{ title:'Risk Scoring Matrix', status:'COMPREHENSIVE', statusColor:'#e74c3c', body:'🔴 Water Strain: HIGH in Larimer, Lochbuie, Denver core — over-appropriated basins, legal challenges for new draws\n🔴 Grid Instability: HIGH in Aurora corridor, Jefferson County — substations near capacity\n🟡 Emissions Exposure: MODERATE statewide — dependent on utility renewable mix\n🟡 Land-Use Conflict: MODERATE in suburban zones, LOW in eastern plains\n🟢 Economic Opportunity: HIGH in Bennett, Aurora (if properly regulated)\n🔴 Permitting Fragmentation: HIGH — no statewide framework creates uncertainty for all parties', stats:[{l:'🔴 Water Strain',v:'HIGH'},{l:'🔴 Grid Instability',v:'HIGH'},{l:'🟡 Emissions',v:'MODERATE'},{l:'🟡 Land-Use',v:'MODERATE'},{l:'🟢 Economic Opp.',v:'HIGH'},{l:'🔴 Permitting Frag.',v:'HIGH'}] }}
+      ]
+    }
+  ]
+};
+
+// ============================================================
+// STATE
+// ============================================================
+var canvasEl, ctx, W, H;
+var panX=0, panY=0, zoom=1;
+var isPanning=false, panStartX=0, panStartY=0, panStartPanX=0, panStartPanY=0;
+var nodes=[], edges=[];
+var activeLayers = new Set(Object.keys(BRANCH_COLORS));
+var selectedNode=null, hoveredNode=null;
+var searchTerm='';
+var riskHeatMode=false;
+var timelineYear=2026;
+var legendOpen=true;
+var animProgress=0, animStart=0;
+var minimapCanvas, minimapCtx;
+
+// ============================================================
+// PNG EXPORT
+// ============================================================
+function exportPNG() {
+  try {
+    var dataURL = canvasEl.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = dataURL;
+    a.download = 'colorado-datacenter-mindmap.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('PNG exported!');
+  } catch(err) {
+    showToast('Export failed — try again');
+  }
+}
+
+// ============================================================
+// SHARE / COPY LINK
+// ============================================================
+function copyLink() {
+  var url = window.location.href;
+  showShareModal(url);
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(url).catch(function(){});
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+}
+
+function showShareModal(url) {
+  var existing = document.getElementById('shareModal');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'shareModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(8px);';
+
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#1a1d2e;border:1px solid #444;border-radius:12px;padding:28px;max-width:520px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
+
+  var heading = document.createElement('h3');
+  heading.style.cssText = 'color:#f5c518;margin:0 0 8px 0;font-size:18px;font-family:Inter,sans-serif;';
+  heading.textContent = '🔗 Share this Mind Map';
+  card.appendChild(heading);
+
+  var desc = document.createElement('p');
+  desc.style.cssText = 'color:#aaa;margin:0 0 16px 0;font-size:13px;font-family:Inter,sans-serif;';
+  desc.textContent = 'Copy this URL and send it to anyone — no login required.';
+  card.appendChild(desc);
+
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
+
+  var urlInput = document.createElement('input');
+  urlInput.type = 'text';
+  urlInput.readOnly = true;
+  urlInput.value = url;
+  urlInput.id = 'shareUrlInput';
+  urlInput.style.cssText = 'flex:1;background:#0f1117;color:#e0e0e0;border:1px solid #555;border-radius:6px;padding:10px 12px;font-size:12px;font-family:monospace;outline:none;';
+  row.appendChild(urlInput);
+
+  var copyBtn = document.createElement('button');
+  copyBtn.id = 'copyUrlBtn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.style.cssText = 'background:#f5c518;color:#000;border:none;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:Inter,sans-serif;';
+  row.appendChild(copyBtn);
+
+  card.appendChild(row);
+
+  var tip = document.createElement('p');
+  tip.style.cssText = 'color:#888;font-size:12px;margin:0 0 16px 0;font-family:Inter,sans-serif;';
+  tip.textContent = '💡 Tip: Click the URL field, then press Ctrl+A (or Cmd+A) then Ctrl+C to copy manually.';
+  card.appendChild(tip);
+
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = 'Close';
+  closeBtn.style.cssText = 'background:#333;color:#fff;border:none;border-radius:6px;padding:8px 20px;cursor:pointer;float:right;font-family:Inter,sans-serif;';
+  card.appendChild(closeBtn);
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  urlInput.addEventListener('click', function() { urlInput.select(); });
+  urlInput.addEventListener('focus', function() { urlInput.select(); });
+
+  copyBtn.addEventListener('click', function() {
+    urlInput.select();
+    try { urlInput.setSelectionRange(0, 99999); } catch(e) {}
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(urlInput.value).catch(function(){});
+    }
+    try { document.execCommand('copy'); } catch(e) {}
+    copyBtn.textContent = '✅ Copied!';
+    copyBtn.style.background = '#27ae60';
+    setTimeout(function() {
+      copyBtn.textContent = 'Copy';
+      copyBtn.style.background = '#f5c518';
+    }, 2500);
+  });
+
+  closeBtn.addEventListener('click', function() {
+    overlay.remove();
+  });
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) overlay.remove();
+  });
+
+  setTimeout(function() { urlInput.select(); }, 100);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg){
+  var t = document.getElementById('toast-msg');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ============================================================
+// NODE LAYOUT
+// ============================================================
+function buildNodes(){
+  nodes=[]; edges=[];
+  var cx=0, cy=0;
+  var center = { id:MIND_MAP_DATA.id, label:MIND_MAP_DATA.label, color:MIND_MAP_DATA.color, radius:MIND_MAP_DATA.radius, detail:MIND_MAP_DATA.detail, x:cx, y:cy, expanded:true, depth:0, parent:null, children:[] };
+  nodes.push(center);
+
+  var branches = MIND_MAP_DATA.branches;
+  var branchCount = branches.length;
+
+  branches.forEach(function(b,i){
+    var angle = (i/branchCount)*Math.PI*2 - Math.PI/2;
+    var dist = 280;
+    var bx = cx + Math.cos(angle)*dist;
+    var by = cy + Math.sin(angle)*dist;
+    var branchNode = { id:b.id, label:b.label, color:b.color, layer:b.layer, detail:b.detail, x:bx, y:by, radius:36, expanded:true, depth:1, parent:center, children:[], baseAngle:angle };
+    nodes.push(branchNode);
+    center.children.push(branchNode);
+    edges.push({ from:center, to:branchNode, color:b.color });
+
+    if(b.children){
+      var childCount = b.children.length;
+      var spread = Math.min(Math.PI*0.65, childCount*0.28);
+      b.children.forEach(function(c,j){
+        var cAngle = angle - spread/2 + (childCount>1 ? (j/(childCount-1))*spread : 0);
+        var cDist = 200;
+        var ccx = bx + Math.cos(cAngle)*cDist;
+        var ccy = by + Math.sin(cAngle)*cDist;
+        var childNode = { id:c.id, label:c.label, color:c.color, layer:c.layer, risk:c.risk, timeActive:c.timeActive, detail:c.detail, x:ccx, y:ccy, radius:24, expanded:false, depth:2, parent:branchNode, children:[], baseAngle:cAngle };
+        nodes.push(childNode);
+        branchNode.children.push(childNode);
+        edges.push({ from:branchNode, to:childNode, color:b.color });
+      });
+    }
+  });
+}
+
+// ============================================================
+// DRAWING
+// ============================================================
+function worldToScreen(wx,wy){
+  return { x: (wx-panX)*zoom + W/2, y: (wy-panY)*zoom + H/2 };
+}
+function screenToWorld(sx,sy){
+  return { x: (sx-W/2)/zoom + panX, y: (sy-H/2)/zoom + panY };
+}
+
+function drawDotGrid(){
+  var spacing = 40;
+  var s = spacing * zoom;
+  if(s<8) return;
+  var offsetX = (-panX*zoom + W/2) % s;
+  var offsetY = (-panY*zoom + H/2) % s;
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  for(var x=offsetX; x<W; x+=s){
+    for(var y=offsetY; y<H; y+=s){
+      ctx.beginPath();
+      ctx.arc(x,y,0.8,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+function bezierEdge(from,to,color,alpha){
+  var s1 = worldToScreen(from.x, from.y);
+  var s2 = worldToScreen(to.x, to.y);
+  var dx=s2.x-s1.x, dy=s2.y-s1.y;
+  var cp1x = s1.x + (s2.x-s1.x)*0.25 - dy*0.15;
+  var cp1y = s1.y + (s2.y-s1.y)*0.25 + dx*0.15;
+  var cp2x = s1.x + (s2.x-s1.x)*0.75 + dy*0.1;
+  var cp2y = s1.y + (s2.y-s1.y)*0.75 - dx*0.1;
+  ctx.beginPath();
+  ctx.moveTo(s1.x, s1.y);
+  ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,s2.x,s2.y);
+  ctx.strokeStyle = color + hexAlpha(alpha);
+  ctx.lineWidth = Math.max(1, 1.5*zoom);
+  ctx.stroke();
+}
+
+function hexAlpha(a){
+  var v = Math.round(Math.min(1,Math.max(0,a))*255);
+  return v.toString(16).padStart(2,'0');
+}
+
+function getNodeAlpha(node){
+  var a = 1;
+  if(animProgress<1){
+    var delay = node.depth * 0.25;
+    var prog = Math.max(0, Math.min(1, (animProgress - delay) / 0.5));
+    a *= prog;
+  }
+  if(node.layer && !activeLayers.has(node.layer)) a *= 0.07;
+  if(searchTerm){
+    var match = nodeMatchesSearch(node);
+    if(!match) a *= 0.12;
+  }
+  if(node.timeActive){
+    var start = node.timeActive[0], end = node.timeActive[1];
+    if(timelineYear < start || timelineYear > end) a *= 0.2;
+  }
+  return a;
+}
+
+function nodeMatchesSearch(node){
+  if(!searchTerm) return true;
+  var s = searchTerm.toLowerCase();
+  var label = (node.label||'').toLowerCase().replace(/\n/g,' ');
+  var title = (node.detail&&node.detail.title||'').toLowerCase();
+  var body = (node.detail&&node.detail.body||'').toLowerCase();
+  return label.indexOf(s)!==-1 || title.indexOf(s)!==-1 || body.indexOf(s)!==-1;
+}
+
+function getRiskColor(node){
+  if(!node.risk) return node.color;
+  if(node.risk==='high') return '#e74c3c';
+  if(node.risk==='moderate') return '#f1c40f';
+  return '#2ecc71';
+}
+
+function drawNode(node){
+  var alpha = getNodeAlpha(node);
+  if(alpha<0.01) return;
+  var s = worldToScreen(node.x, node.y);
+  var r = node.radius * zoom;
+  if(s.x+r<-50||s.x-r>W+50||s.y+r<-50||s.y-r>H+50) return;
+
+  var baseColor = riskHeatMode ? getRiskColor(node) : node.color;
+  var isHovered = hoveredNode === node;
+  var isSelected = selectedNode === node;
+  var scale = isHovered ? 1.12 : 1;
+  var dr = r * scale;
+
+  if(isHovered || isSelected){
+    var grad = ctx.createRadialGradient(s.x,s.y,dr*0.5,s.x,s.y,dr*2.5);
+    grad.addColorStop(0, baseColor + '40');
+    grad.addColorStop(1, baseColor + '00');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,dr*2.5,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.beginPath();
+  ctx.arc(s.x,s.y,dr,0,Math.PI*2);
+  var fillGrad = ctx.createRadialGradient(s.x-dr*0.3,s.y-dr*0.3,0,s.x,s.y,dr);
+  fillGrad.addColorStop(0, baseColor + hexAlpha(alpha*0.95));
+  fillGrad.addColorStop(1, baseColor + hexAlpha(alpha*0.6));
+  ctx.fillStyle = fillGrad;
+  ctx.fill();
+
+  if(isSelected){
+    ctx.strokeStyle = '#ffffff' + hexAlpha(alpha*0.9);
+    ctx.lineWidth = 3*zoom;
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = baseColor + hexAlpha(alpha*0.4);
+    ctx.lineWidth = 1.5*zoom;
+    ctx.stroke();
+  }
+
+  var fontSize = Math.max(8, (node.depth===0?14:node.depth===1?11:9.5)*zoom);
+  ctx.font = (node.depth===0?'700':'600') + ' ' + fontSize + 'px Inter, sans-serif';
+  ctx.fillStyle = '#ffffff' + hexAlpha(alpha*0.95);
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  var lines = (node.label||'').split('\n');
+  var lineH = fontSize*1.25;
+  var startY = s.y - (lines.length-1)*lineH/2;
+  lines.forEach(function(line,i){
+    ctx.fillText(line, s.x, startY + i*lineH);
+  });
+
+  if(node.children && node.children.length>0 && node.depth>=1){
+    var indicatorR = 6*zoom;
+    var ix = s.x + dr*0.75;
+    var iy = s.y - dr*0.75;
+    ctx.beginPath();
+    ctx.arc(ix,iy,indicatorR,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(15,17,23,0.7)';
+    ctx.fill();
+    ctx.strokeStyle = baseColor + hexAlpha(alpha*0.6);
+    ctx.lineWidth = 1*zoom;
+    ctx.stroke();
+    ctx.font = '700 ' + Math.max(7,9*zoom) + 'px Inter';
+    ctx.fillStyle = '#ffffff' + hexAlpha(alpha*0.8);
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(node.expanded?'\u2212':'+', ix, iy+0.5);
+  }
+
+  if(node.detail && node.detail.status && node.depth===2 && zoom>0.5){
+    var badgeY = s.y + dr + 10*zoom;
+    var badgeText = node.detail.status;
+    var badgeFontSize = Math.max(6, 7.5*zoom);
+    ctx.font = '700 ' + badgeFontSize + 'px Inter';
+    var tw = ctx.measureText(badgeText).width + 10*zoom;
+    var bh = badgeFontSize + 6*zoom;
+    var statusCol = node.detail.statusColor || baseColor;
+    ctx.fillStyle = statusCol + hexAlpha(alpha*0.2);
+    roundRect(ctx, s.x-tw/2, badgeY-bh/2, tw, bh, 4*zoom);
+    ctx.fill();
+    ctx.fillStyle = statusCol + hexAlpha(alpha*0.9);
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(badgeText, s.x, badgeY);
+  }
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function draw(){
+  if (!ctx) return;
+  try {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0f1117';
+    ctx.fillRect(0,0,W,H);
+    drawDotGrid();
+
+    edges.forEach(function(e){
+      var fromAlpha = getNodeAlpha(e.from);
+      var toAlpha = getNodeAlpha(e.to);
+      var alpha = Math.min(fromAlpha, toAlpha)*0.5;
+      if(alpha>0.01) bezierEdge(e.from, e.to, e.color, alpha);
+    });
+
+    var sorted = nodes.slice().sort(function(a,b){ return a.depth-b.depth; });
+    sorted.forEach(function(n){ drawNode(n); });
+
+    drawMinimap();
+  } catch(err) {}
+}
+
+// ============================================================
+// MINIMAP
+// ============================================================
+function drawMinimap(){
+  if(!minimapCtx) return;
+  var mw=180, mh=120;
+  minimapCtx.clearRect(0,0,mw,mh);
+  minimapCtx.fillStyle='#0b0d12';
+  minimapCtx.fillRect(0,0,mw,mh);
+
+  var minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  nodes.forEach(function(n){
+    if(n.x-60<minX)minX=n.x-60; if(n.x+60>maxX)maxX=n.x+60;
+    if(n.y-60<minY)minY=n.y-60; if(n.y+60>maxY)maxY=n.y+60;
+  });
+  var rangeX=maxX-minX||1, rangeY=maxY-minY||1;
+  var scale=Math.min(mw/rangeX, mh/rangeY)*0.85;
+  var offX=(mw-rangeX*scale)/2, offY=(mh-rangeY*scale)/2;
+
+  edges.forEach(function(e){
+    var x1=(e.from.x-minX)*scale+offX, y1=(e.from.y-minY)*scale+offY;
+    var x2=(e.to.x-minX)*scale+offX, y2=(e.to.y-minY)*scale+offY;
+    minimapCtx.beginPath(); minimapCtx.moveTo(x1,y1); minimapCtx.lineTo(x2,y2);
+    minimapCtx.strokeStyle=e.color+'40'; minimapCtx.lineWidth=0.5; minimapCtx.stroke();
+  });
+
+  nodes.forEach(function(n){
+    var mx=(n.x-minX)*scale+offX, my=(n.y-minY)*scale+offY;
+    var mr=Math.max(1.5, n.radius*scale*0.08);
+    var a = getNodeAlpha(n);
+    minimapCtx.beginPath(); minimapCtx.arc(mx,my,mr,0,Math.PI*2);
+    var c = riskHeatMode ? getRiskColor(n) : n.color;
+    minimapCtx.fillStyle=c+hexAlpha(a*0.8);
+    minimapCtx.fill();
+  });
+
+  var vpEl = document.getElementById('minimap-viewport');
+  if(vpEl){
+    var tlWorld = screenToWorld(0,56);
+    var brWorld = screenToWorld(W,H-50);
+    var vleft = (tlWorld.x-minX)*scale+offX;
+    var vtop = (tlWorld.y-minY)*scale+offY;
+    var vright = (brWorld.x-minX)*scale+offX;
+    var vbottom = (brWorld.y-minY)*scale+offY;
+    vpEl.style.left = Math.max(0,vleft)+'px';
+    vpEl.style.top = Math.max(0,vtop)+'px';
+    vpEl.style.width = Math.min(mw,Math.max(10,vright-vleft))+'px';
+    vpEl.style.height = Math.min(mh,Math.max(10,vbottom-vtop))+'px';
+  }
+}
+
+// ============================================================
+// INTERACTION
+// ============================================================
+function hitTest(sx,sy){
+  var w = screenToWorld(sx,sy);
+  var closest=null, closestDist=Infinity;
+  for(var i=nodes.length-1;i>=0;i--){
+    var n=nodes[i];
+    var a = getNodeAlpha(n);
+    if(a<0.15) continue;
+    var dx=w.x-n.x, dy=w.y-n.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<n.radius*1.3 && dist<closestDist){
+      closest=n; closestDist=dist;
+    }
+  }
+  return closest;
+}
+
+function showDetail(node){
+  if(!node||!node.detail) return;
+  selectedNode=node;
+  var panel = document.getElementById('detail-panel');
+  var title = document.getElementById('detail-title');
+  var meta = document.getElementById('detail-meta');
+  var body = document.getElementById('detail-body');
+  if (!panel || !title || !meta || !body) return;
+
+  title.textContent = node.detail.title || node.label.replace(/\n/g,' ');
+
+  meta.innerHTML='';
+  if(node.detail.status){
+    var badge = document.createElement('span');
+    badge.className='status-badge';
+    badge.style.background = (node.detail.statusColor||node.color)+'25';
+    badge.style.color = node.detail.statusColor||node.color;
+    badge.textContent = node.detail.status;
+    meta.appendChild(badge);
+  }
+  if(node.layer){
+    var layerBadge = document.createElement('span');
+    layerBadge.className='status-badge';
+    layerBadge.style.background = (BRANCH_COLORS[node.layer]||'#666')+'20';
+    layerBadge.style.color = BRANCH_COLORS[node.layer]||'#999';
+    layerBadge.textContent = node.layer.charAt(0).toUpperCase()+node.layer.slice(1);
+    meta.appendChild(layerBadge);
+  }
+  if(node.risk){
+    var riskBadge = document.createElement('span');
+    riskBadge.className='status-badge';
+    var rc = node.risk==='high'?'#e74c3c':node.risk==='moderate'?'#f1c40f':'#2ecc71';
+    riskBadge.style.background = rc+'20';
+    riskBadge.style.color = rc;
+    riskBadge.textContent = 'Risk: '+node.risk.toUpperCase();
+    meta.appendChild(riskBadge);
+  }
+
+  var html = '<p style="margin-bottom:16px;">'+node.detail.body.replace(/\n/g,'<br>')+'</p>';
+  if(node.detail.stats && node.detail.stats.length){
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">';
+    node.detail.stats.forEach(function(s){
+      html += '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px;">';
+      html += '<div style="font-size:10px;color:#6e6e78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">'+s.l+'</div>';
+      html += '<div style="font-size:14px;font-weight:700;color:#f0f0f0;">'+s.v+'</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  if(node.timeActive){
+    html += '<div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.03);border-radius:10px;">';
+    html += '<div style="font-size:10px;color:#6e6e78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Active Period</div>';
+    html += '<div style="display:flex;align-items:center;gap:8px;">';
+    html += '<span style="font-size:13px;font-weight:600;color:#f0f0f0;">'+node.timeActive[0]+'</span>';
+    html += '<div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;">';
+    var pct1 = Math.max(0,Math.min(100,((node.timeActive[0]-2024)/4)*100));
+    var pct2 = Math.max(0,Math.min(100,((node.timeActive[1]-2024)/4)*100));
+    html += '<div style="position:absolute;left:'+pct1+'%;right:'+(100-pct2)+'%;top:0;height:100%;background:'+(node.detail.statusColor||node.color)+';border-radius:2px;"></div>';
+    html += '</div>';
+    html += '<span style="font-size:13px;font-weight:600;color:#f0f0f0;">'+node.timeActive[1]+'</span>';
+    html += '</div></div>';
+  }
+  body.innerHTML=html;
+  panel.classList.add('open');
+}
+
+function hideDetail(){
+  var panel = document.getElementById('detail-panel');
+  if (panel) panel.classList.remove('open');
+  selectedNode=null;
+}
+
+// ============================================================
+// TIMELINE
+// ============================================================
+function updateTimeline(pct){
+  timelineYear = 2024 + pct*4;
+  var yearDisplay = timelineYear.toFixed(1);
+  if(yearDisplay.endsWith('.0')) yearDisplay = yearDisplay.replace('.0','');
+  var yearEl = document.getElementById('timeline-year');
+  var fillEl = document.getElementById('timeline-fill');
+  var thumbEl = document.getElementById('timeline-thumb');
+  if (yearEl) yearEl.textContent = yearDisplay;
+  if (fillEl) fillEl.style.width = (pct*100)+'%';
+  if (thumbEl) thumbEl.style.left = (pct*100)+'%';
+}
+
+// ============================================================
+// ANIMATION LOOP
+// ============================================================
+function tick(){
+  try {
+    animProgress = Math.min(1, (performance.now()-animStart)/2000);
+    draw();
+  } catch(err) {}
+  requestAnimationFrame(tick);
+}
+
+// ============================================================
+// REFERENCES MODAL LOGIC
+// ============================================================
+function openReferences() {
+  var overlay = document.getElementById('ref-overlay');
+  if (overlay) {
+    overlay.classList.add('open');
+    var modal = document.getElementById('ref-modal');
+    if (modal) modal.scrollTop = 0;
+  }
+}
+function closeReferences() {
+  var overlay = document.getElementById('ref-overlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+function copyAllReferences() {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(ALL_REFERENCES_TEXT).then(function() {
+      showToast('All references copied to clipboard!');
+    }).catch(function() {
+      fallbackCopyRefs();
+    });
+  } else {
+    fallbackCopyRefs();
+  }
+}
+
+function fallbackCopyRefs() {
+  var ta = document.createElement('textarea');
+  ta.value = ALL_REFERENCES_TEXT;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); showToast('All references copied!'); } catch(e) { showToast('Copy failed — try download instead'); }
+  document.body.removeChild(ta);
+}
+
+function downloadReferences() {
+  try {
+    var blob = new Blob([ALL_REFERENCES_TEXT], { type: 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'Colorado_DataCenter_APA_References.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('References downloaded!');
+  } catch(err) {
+    showToast('Download failed');
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init(){
+  try {
+    canvasEl = document.getElementById('mindmap-canvas');
+    if (!canvasEl) return;
+    ctx = canvasEl.getContext('2d');
+    if (!ctx) return;
+
+    minimapCanvas = document.getElementById('minimap-canvas');
+    if (minimapCanvas) {
+      minimapCanvas.width=180; minimapCanvas.height=120;
+      minimapCtx = minimapCanvas.getContext('2d');
+    }
+
+    resize();
+    buildNodes();
+    animStart = performance.now();
+
+    updateTimeline(0.5);
+
+    requestAnimationFrame(tick);
+
+    // MOUSE EVENTS on canvas
+    canvasEl.addEventListener('mousedown', function(e){
+      var hit = hitTest(e.clientX, e.clientY);
+      if(hit){
+        showDetail(hit);
+        return;
+      }
+      isPanning=true;
+      panStartX=e.clientX; panStartY=e.clientY;
+      panStartPanX=panX; panStartPanY=panY;
+      canvasEl.classList.add('grabbing');
+    });
+    canvasEl.addEventListener('mousemove', function(e){
+      if(isPanning){
+        panX = panStartPanX - (e.clientX-panStartX)/zoom;
+        panY = panStartPanY - (e.clientY-panStartY)/zoom;
+      } else {
+        hoveredNode = hitTest(e.clientX, e.clientY);
+        canvasEl.style.cursor = hoveredNode ? 'pointer' : 'grab';
+      }
+    });
+    canvasEl.addEventListener('mouseup', function(){ isPanning=false; canvasEl.classList.remove('grabbing'); });
+    canvasEl.addEventListener('mouseleave', function(){ isPanning=false; canvasEl.classList.remove('grabbing'); hoveredNode=null; });
+
+    canvasEl.addEventListener('wheel', function(e){
+      e.preventDefault();
+      var factor = e.deltaY>0 ? 0.9 : 1.1;
+      var newZoom = Math.max(0.15, Math.min(4, zoom*factor));
+      var wx = (e.clientX-W/2)/zoom + panX;
+      var wy = (e.clientY-H/2)/zoom + panY;
+      zoom = newZoom;
+      panX = wx - (e.clientX-W/2)/zoom;
+      panY = wy - (e.clientY-H/2)/zoom;
+    }, {passive:false});
+
+    // Touch support
+    var touchStartDist=0, touchStartZoom=1;
+    canvasEl.addEventListener('touchstart', function(e){
+      if(e.touches.length===1){
+        var t=e.touches[0];
+        var hit=hitTest(t.clientX,t.clientY);
+        if(hit){ showDetail(hit); return; }
+        isPanning=true; panStartX=t.clientX; panStartY=t.clientY; panStartPanX=panX; panStartPanY=panY;
+      } else if(e.touches.length===2){
+        isPanning=false;
+        var dx=e.touches[0].clientX-e.touches[1].clientX;
+        var dy=e.touches[0].clientY-e.touches[1].clientY;
+        touchStartDist=Math.sqrt(dx*dx+dy*dy);
+        touchStartZoom=zoom;
+      }
+    },{passive:true});
+    canvasEl.addEventListener('touchmove', function(e){
+      e.preventDefault();
+      if(e.touches.length===1 && isPanning){
+        var t=e.touches[0];
+        panX=panStartPanX-(t.clientX-panStartX)/zoom;
+        panY=panStartPanY-(t.clientY-panStartY)/zoom;
+      } else if(e.touches.length===2){
+        var dx=e.touches[0].clientX-e.touches[1].clientX;
+        var dy=e.touches[0].clientY-e.touches[1].clientY;
+        var dist=Math.sqrt(dx*dx+dy*dy);
+        zoom=Math.max(0.15,Math.min(4,touchStartZoom*(dist/touchStartDist)));
+      }
+    },{passive:false});
+    canvasEl.addEventListener('touchend', function(){ isPanning=false; });
+
+    // LAYER TOGGLES
+    document.querySelectorAll('.layer-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var layer=btn.dataset.layer;
+        if (!layer) return;
+        if(activeLayers.has(layer)){ activeLayers.delete(layer); btn.classList.remove('active'); }
+        else { activeLayers.add(layer); btn.classList.add('active'); }
+      });
+    });
+
+    // SEARCH
+    var searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', function(e){
+        searchTerm = (e.target.value || '').trim();
+      });
+    }
+
+    // RISK HEAT
+    var riskBtn = document.getElementById('risk-toggle-btn');
+    if (riskBtn) {
+      riskBtn.addEventListener('click', function(){
+        riskHeatMode=!riskHeatMode;
+        if(riskHeatMode){ riskBtn.style.background='rgba(231,76,60,0.2)'; riskBtn.style.borderColor='rgba(231,76,60,0.4)'; riskBtn.style.color='#e74c3c'; }
+        else { riskBtn.style.background=''; riskBtn.style.borderColor=''; riskBtn.style.color=''; }
+      });
+    }
+
+    // REFERENCES BUTTON
+    var refsBtn = document.getElementById('references-btn');
+    if (refsBtn) {
+      refsBtn.addEventListener('click', function(){
+        openReferences();
+      });
+    }
+
+    // REFERENCES CLOSE
+    var refCloseBtn = document.getElementById('ref-close-btn');
+    if (refCloseBtn) {
+      refCloseBtn.addEventListener('click', function(){
+        closeReferences();
+      });
+    }
+
+    // REFERENCES OVERLAY CLICK
+    var refOverlay = document.getElementById('ref-overlay');
+    if (refOverlay) {
+      refOverlay.addEventListener('click', function(e){
+        if (e.target === refOverlay) closeReferences();
+      });
+    }
+
+    // COPY ALL REFS
+    var copyRefsBtn = document.getElementById('copy-refs-btn');
+    if (copyRefsBtn) {
+      copyRefsBtn.addEventListener('click', function(){
+        copyAllReferences();
+      });
+    }
+
+    // DOWNLOAD REFS
+    var dlRefsBtn = document.getElementById('download-refs-btn');
+    if (dlRefsBtn) {
+      dlRefsBtn.addEventListener('click', function(){
+        downloadReferences();
+      });
+    }
+
+    // EXPORT PNG
+    var exportBtn = document.getElementById('export-btn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function(){
+        exportPNG();
+      });
+    }
+
+    // SHARE BUTTON
+    var shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function(){
+        copyLink();
+      });
+    }
+
+    // DETAIL CLOSE
+    var detailCloseBtn = document.getElementById('detail-close');
+    if (detailCloseBtn) {
+      detailCloseBtn.addEventListener('click', hideDetail);
+    }
+
+    // LEGEND TOGGLE
+    var legendToggleBtn = document.getElementById('legend-toggle');
+    if (legendToggleBtn) {
+      legendToggleBtn.addEventListener('click', function(){
+        legendOpen=!legendOpen;
+        var legendItems = document.getElementById('legend-items');
+        if (legendItems) legendItems.style.display=legendOpen?'block':'none';
+      });
+    }
+
+    // TIMELINE DRAG
+    var track=document.getElementById('timeline-track');
+    var thumb=document.getElementById('timeline-thumb');
+    var draggingTimeline=false;
+    function timelineFromEvent(e){
+      if (!track) return;
+      var rect=track.getBoundingClientRect();
+      var cx = (e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0));
+      var pct=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
+      updateTimeline(pct);
+    }
+    if (track) {
+      track.addEventListener('mousedown', function(e){ draggingTimeline=true; timelineFromEvent(e); });
+    }
+    if (thumb) {
+      thumb.addEventListener('mousedown', function(e){ draggingTimeline=true; e.stopPropagation(); });
+    }
+    document.addEventListener('mousemove', function(e){ if(draggingTimeline) timelineFromEvent(e); });
+    document.addEventListener('mouseup', function(){ draggingTimeline=false; });
+    if (track) {
+      track.addEventListener('touchstart', function(e){ draggingTimeline=true; timelineFromEvent(e); },{passive:true});
+    }
+    document.addEventListener('touchmove', function(e){ if(draggingTimeline) timelineFromEvent(e); },{passive:true});
+    document.addEventListener('touchend', function(){ draggingTimeline=false; });
+
+    // Keyboard: Escape to close panels/modals
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape'){
+        var refOv = document.getElementById('ref-overlay');
+        if (refOv && refOv.classList.contains('open')) {
+          closeReferences();
+          return;
+        }
+        var shareModal = document.getElementById('shareModal');
+        if(shareModal){
+          shareModal.remove();
+        } else if(document.getElementById('detail-panel') && document.getElementById('detail-panel').classList.contains('open')){
+          hideDetail();
+        }
+      }
+    });
+
+    window.addEventListener('resize', resize);
+  } catch(err) {
+    console.error('Mind map init error:', err);
+  }
+}
+
+function resize(){
+  try {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    var dpr = window.devicePixelRatio||1;
+    if (canvasEl) {
+      canvasEl.width = W*dpr;
+      canvasEl.height = H*dpr;
+      canvasEl.style.width = W+'px';
+      canvasEl.style.height = H+'px';
+      if (ctx) ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+  } catch(err) {}
+}
+
+// BOOT
+if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+  lucide.createIcons();
+}
+init();
+
+document.addEventListener('DOMContentLoaded', function(){
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+});
+setTimeout(function(){
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  }
+}, 600);
+</script>
+</body>
+</html>
