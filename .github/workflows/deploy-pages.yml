@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - mik-create-bennett-citizens-interactive
   workflow_dispatch:
 
 permissions:
