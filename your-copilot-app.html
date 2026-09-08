@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Copilot App</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #fff;
+      --ink: #202431;
+      --muted: #747b8d;
+      --line: #e7e9f0;
+      --purple: #7657f6;
+      --purple-soft: #efecff;
+      --green: #31ae7b;
+      --shadow: 0 18px 50px rgba(35, 36, 68, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+    aside {
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+      padding: 1.5rem 1rem;
+      border-right: 1px solid var(--line);
+      background: #fbfbfd;
+    }
+    .brand { display: flex; align-items: center; gap: .65rem; padding: 0 .6rem; font-weight: 800; }
+    .brand-mark {
+      display: grid; place-items: center; width: 2rem; height: 2rem;
+      border-radius: .7rem; color: #fff; background: linear-gradient(135deg, #9379ff, #5d40e6);
+      box-shadow: 0 7px 15px rgba(118,87,246,.25);
+    }
+    .new-chat {
+      display: flex; align-items: center; gap: .55rem; width: 100%; padding: .75rem .85rem;
+      border: 0; border-radius: .7rem; color: #fff; background: var(--purple); font-weight: 700;
+    }
+    nav { display: grid; gap: .25rem; }
+    nav button {
+      display: flex; align-items: center; gap: .75rem; width: 100%; padding: .7rem .8rem;
+      border: 0; border-radius: .6rem; color: var(--muted); background: transparent; text-align: left;
+    }
+    nav button.active, nav button:hover { color: var(--purple); background: var(--purple-soft); }
+    .section-label { margin: .5rem .7rem .35rem; color: #a0a5b4; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .recent { display: grid; gap: .2rem; }
+    .recent button {
+      overflow: hidden; padding: .55rem .7rem; border: 0; border-radius: .5rem; color: var(--muted);
+      background: transparent; text-align: left; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem;
+    }
+    .recent button:hover { background: #f0f0f6; color: var(--ink); }
+    .profile { display: flex; align-items: center; gap: .65rem; margin-top: auto; padding: .7rem; border-top: 1px solid var(--line); }
+    .avatar { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; color: #fff; background: #f18f72; font-size: .8rem; font-weight: 800; }
+    .profile strong, .profile small { display: block; }
+    .profile small { margin-top: .2rem; color: var(--muted); font-size: .7rem; }
+    main { min-width: 0; }
+    header {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 1.25rem clamp(1rem, 4vw, 4rem); border-bottom: 1px solid var(--line); background: var(--panel);
+    }
+    .crumb { color: var(--muted); font-size: .85rem; }
+    .crumb strong { color: var(--ink); }
+    .header-actions { display: flex; gap: .45rem; }
+    .icon-button { width: 2.35rem; height: 2.35rem; border: 1px solid var(--line); border-radius: .65rem; color: var(--muted); background: #fff; }
+    .workspace { max-width: 930px; margin: 0 auto; padding: clamp(2rem, 6vw, 5rem) 1.25rem; }
+    .welcome { max-width: 680px; margin-bottom: 2rem; }
+    .welcome .kicker { color: var(--purple); font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: .6rem 0 .75rem; font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -.05em; }
+    .welcome p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .suggestions { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-bottom: 1.5rem; }
+    .suggestion { padding: 1rem; border: 1px solid var(--line); border-radius: .9rem; color: var(--ink); background: var(--panel); text-align: left; box-shadow: var(--shadow); }
+    .suggestion:hover { border-color: #c9c0ff; transform: translateY(-2px); transition: .2s ease; }
+    .suggestion span { display: block; margin-bottom: .8rem; font-size: 1.25rem; }
+    .suggestion strong { display: block; margin-bottom: .25rem; font-size: .88rem; }
+    .suggestion small { color: var(--muted); line-height: 1.4; }
+    .composer { padding: .7rem; border: 1px solid #d9dbe6; border-radius: 1rem; background: var(--panel); box-shadow: 0 12px 28px rgba(35,36,68,.09); }
+    textarea { display: block; width: 100%; min-height: 82px; padding: .55rem; resize: vertical; border: 0; outline: 0; color: var(--ink); background: transparent; }
+    textarea::placeholder { color: #a2a7b6; }
+    .composer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .tools { display: flex; gap: .25rem; }
+    .tool { padding: .45rem .6rem; border: 0; border-radius: .5rem; color: var(--muted); background: transparent; font-size: .78rem; }
+    .tool:hover { background: var(--bg); color: var(--ink); }
+    .send { padding: .58rem 1rem; border: 0; border-radius: .6rem; color: #fff; background: var(--purple); font-weight: 700; }
+    .status { display: flex; justify-content: center; gap: .45rem; margin-top: 1rem; color: var(--muted); font-size: .75rem; }
+    .status i { width: .45rem; height: .45rem; margin-top: .2rem; border-radius: 50%; background: var(--green); }
+    .projects { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-top: 3rem; }
+    .project { padding: 1rem; border: 1px solid var(--line); border-radius: .8rem; background: var(--panel); }
+    .project-top { display: flex; justify-content: space-between; gap: 1rem; }
+    .project h2 { margin: 0; font-size: .95rem; }
+    .project p { margin: .4rem 0 0; color: var(--muted); font-size: .8rem; }
+    .badge { padding: .25rem .45rem; border-radius: 999px; color: #31815f; background: #e4f6ee; font-size: .68rem; font-weight: 700; }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; }
+      aside { display: none; }
+      header { padding: 1rem; }
+      .suggestions, .projects { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><span class="brand-mark">✦</span> Your Copilot</div>
+      <button class="new-chat">＋ <span>New conversation</span></button>
+      <nav aria-label="Primary navigation">
+        <button class="active">⌂ <span>Home</span></button>
+        <button>◌ <span>Discover</span></button>
+        <button>▣ <span>Projects</span></button>
+      </nav>
+      <div>
+        <div class="section-label">Recent</div>
+        <div class="recent">
+          <button>Colorado data center mind map</button>
+          <button>Q3 launch planning</button>
+          <button>Website content review</button>
+          <button>Research notes</button>
+        </div>
+      </div>
+      <div class="profile"><span class="avatar">MC</span><div><strong>My workspace</strong><small>Personal account</small></div></div>
+    </aside>
+
+    <main>
+      <header>
+        <div class="crumb">Workspace <span>/</span> <strong>Home</strong></div>
+        <div class="header-actions"><button class="icon-button" aria-label="Search">⌕</button><button class="icon-button" aria-label="Settings">⚙</button></div>
+      </header>
+      <section class="workspace">
+        <div class="welcome">
+          <div class="kicker">Good afternoon</div>
+          <h1>What will we make today?</h1>
+          <p>Your copilot is ready to help you think, create, research, and turn rough ideas into useful outcomes.</p>
+        </div>
+
+        <div class="suggestions">
+          <button class="suggestion"><span>✍️</span><strong>Help me write</strong><small>Draft, rewrite, or sharpen an idea</small></button>
+          <button class="suggestion"><span>💡</span><strong>Help me think</strong><small>Explore options and make a plan</small></button>
+          <button class="suggestion"><span>🔎</span><strong>Help me research</strong><small>Understand a topic with clarity</small></button>
+        </div>
+
+        <form class="composer" onsubmit="return false">
+          <textarea placeholder="Ask anything, or describe what you want to create..." aria-label="Message"></textarea>
+          <div class="composer-bottom">
+            <div class="tools"><button class="tool" type="button">＋ Attach</button><button class="tool" type="button">◉ Voice</button></div>
+            <button class="send" type="submit">Send ↑</button>
+          </div>
+        </form>
+        <div class="status"><i></i> Copilot is online and ready</div>
+
+        <div class="projects">
+          <div class="project"><div class="project-top"><div><h2>Colorado data center mind map</h2><p>Updated just now · 8 messages</p></div><span class="badge">Active</span></div></div>
+          <div class="project"><div class="project-top"><div><h2>Website content review</h2><p>Updated yesterday · 4 messages</p></div><span class="badge">Saved</span></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
